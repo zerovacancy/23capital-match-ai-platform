@@ -71,32 +71,39 @@ const ValueSection = () => {
                 <h3 className="text-xl font-semibold text-gray-900">Performance Metrics</h3>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {metrics.map((metric, index) => (
-                  <div key={index} className="relative">
-                    <div className="flex items-center mb-2">
-                      <div className="p-1.5 bg-[#F8F5F0] rounded-md mr-2">
+                  <div key={index} className="flex flex-col h-full border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    {/* Card header with consistent height */}
+                    <div className="flex items-center p-4 border-b border-gray-100 bg-gray-50">
+                      <div className="p-1.5 bg-[#F8F5F0] rounded-md mr-3 flex-shrink-0">
                         {metric.icon}
                       </div>
-                      <h4 className="font-medium text-gray-900">{metric.title}</h4>
+                      <h4 className="font-medium text-gray-900 line-clamp-1">{metric.title}</h4>
                     </div>
-                    <p className="text-sm text-gray-500 mb-4">{metric.description}</p>
                     
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                      <div className="flex items-baseline mb-2">
-                        <span className="text-3xl font-bold text-[#275E91] mr-2">{metric.value}</span>
-                        <span className="text-sm text-gray-500">improvement</span>
-                      </div>
+                    {/* Card body with fixed height description */}
+                    <div className="p-4 flex-grow flex flex-col">
+                      <p className="text-sm text-gray-500 mb-4 h-10">{metric.description}</p>
                       
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                        <div 
-                          className="h-2 rounded-full" 
-                          style={{ width: `${metric.progress}%`, backgroundColor: metric.color }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>0%</span>
-                        <span>100%</span>
+                      {/* Metric value display with consistent alignment */}
+                      <div className="mt-auto">
+                        <div className="flex items-baseline mb-3">
+                          <span className="text-3xl font-bold text-[#275E91] mr-2">{metric.value}</span>
+                          <span className="text-sm text-gray-500">improvement</span>
+                        </div>
+                        
+                        {/* Progress bar with consistent styling */}
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-1.5">
+                          <div 
+                            className="h-2 rounded-full" 
+                            style={{ width: `${metric.progress}%`, backgroundColor: metric.color }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>0%</span>
+                          <span>100%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
