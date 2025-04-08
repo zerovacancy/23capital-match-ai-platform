@@ -20,6 +20,10 @@ import {
   DialogTrigger 
 } from "@/components/ui/dialog";
 
+// Import analytics components
+import { AnalyticsDashboard } from './analytics';
+import { AnalyticsProvider } from '@/context/AnalyticsContext';
+
 interface DashboardSummaryProps {
   title: string;
   value: string | number;
@@ -447,18 +451,9 @@ export function UnifiedDashboard() {
           </TabsContent>
           
           <TabsContent value="analytics" className="mt-0">
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="max-w-lg w-full mx-auto rounded-xl p-10 text-center border border-gray-200 bg-white shadow-sm">
-                <div className="p-3 bg-[#F8F5F0] rounded-md mb-6 mx-auto w-fit">
-                  <LineChart className="w-12 h-12 text-[#275E91]" />
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">Advanced Analytics View</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-6">This section will contain detailed charts, trends, and projections based on historical data and AI predictions.</p>
-                <Button className="flex items-center gap-2 px-6 bg-[#275E91] hover:bg-[#1E4A73] text-white">
-                  Explore Analytics <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <AnalyticsProvider>
+              <AnalyticsDashboard />
+            </AnalyticsProvider>
           </TabsContent>
           
           <TabsContent value="relationships" className="mt-0">
