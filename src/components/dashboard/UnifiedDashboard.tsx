@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { CapitalProgressCard } from './CapitalProgressCard';
 import { CapitalSourceChart } from './CapitalSourceChart';
 import { MonthlyProgressChart } from './MonthlyProgressChart';
-import { capitalRaiseMetrics, lps, deals, matches } from '@/data';
+import { capitalRaiseMetrics } from '@/data/capitalRaise';
+import { lps } from '@/data/lps';
+import { deals } from '@/data/deals';
+import { matches } from '@/data/matches';
 import { LPProfileCard } from '../lp-profile/LPProfileCard';
 import { DealCard } from '../deal-analyzer/DealCard';
 import { MatchCard } from '../matching-engine/MatchCard';
@@ -23,6 +26,9 @@ import {
 // Import analytics components
 import { AnalyticsDashboard } from './analytics';
 import { AnalyticsProvider } from '@/context/AnalyticsContext';
+
+// Import simplified relationships dashboard
+import SimpleRelationshipsDashboard from './relationships/SimpleRelationshipsDashboard';
 
 interface DashboardSummaryProps {
   title: string;
@@ -457,18 +463,7 @@ export function UnifiedDashboard() {
           </TabsContent>
           
           <TabsContent value="relationships" className="mt-0">
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="max-w-lg w-full mx-auto rounded-xl p-10 text-center border border-gray-200 bg-white shadow-sm">
-                <div className="p-3 bg-[#F8F5F0] rounded-md mb-6 mx-auto w-fit">
-                  <Users className="w-12 h-12 text-[#275E91]" />
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">LP Relationship Manager</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-6">View and manage all investor relationships, track communications, and monitor engagement metrics.</p>
-                <Button className="flex items-center gap-2 px-6 bg-[#275E91] hover:bg-[#1E4A73] text-white">
-                  Manage Relationships <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <SimpleRelationshipsDashboard />
           </TabsContent>
         </div>
       </Tabs>
