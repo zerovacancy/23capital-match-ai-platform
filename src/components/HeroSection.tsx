@@ -52,16 +52,16 @@ const HeroSection = () => {
         
         {/* Enhanced headline with improved visual hierarchy and Primary Blue */}
         <h1 className="mb-6 max-w-4xl animate-fade-in">
-          <span className="text-[#275E91] font-bold">LG Development</span>{" "}
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#275E91] to-[#7A8D79] animate-text-gradient font-bold">AI</span>
-          <span className="text-[#275E91] font-bold"> Assistant</span>
+          <span className="text-[#275E91] font-bold">AI-Powered Intelligence</span>{" "}
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#275E91] to-[#7A8D79] animate-text-gradient font-bold">for Real Estate</span>
+          <span className="text-[#275E91] font-bold"> Capital, Development & Design</span>
         </h1>
         
         {/* Enhanced subtitle with improved text color and Secondary Green accents */}
         <div className="large-text md:text-2xl mb-8 max-w-3xl relative">
           <div className="absolute -left-2 top-0 w-1 h-full bg-gradient-to-b from-[#7A8D79] to-transparent opacity-60 rounded-full"></div>
           <p className="text-[#1C1C1C] leading-relaxed">
-            AI-powered matching algorithm that aligns LG Development's projects with investor criteria in real-time, accelerating capital formation for future developments.
+            Automate deal sourcing, LP outreach, proposal generation, and more—built for development, construction, and architecture teams.
           </p>
         </div>
         
