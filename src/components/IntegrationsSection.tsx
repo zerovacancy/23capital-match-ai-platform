@@ -92,7 +92,8 @@ const IntegrationsSection = () => {
         <div className="relative mb-0">
           <div className="relative w-full mx-auto max-w-3xl" style={{ height: "450px" }}>
             {/* Center platform */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-br from-lg-blue-dark via-lg-blue to-lg-accent rounded-lg flex items-center justify-center z-30 shadow-lg">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-lg flex items-center justify-center z-30 shadow-md" 
+                 style={{ backgroundColor: '#275E91' }}>
               <div className="text-white text-center px-2">
                 <p className="font-bold text-base">Capital Match</p>
                 <p className="text-sm">AI Platform</p>
@@ -113,20 +114,22 @@ const IntegrationsSection = () => {
               return (
                 <div 
                   key={index} 
-                  className="absolute w-20 h-20 bg-white rounded-full shadow-md flex flex-col items-center justify-center z-20 transition-all duration-300 hover:scale-110 hover:shadow-lg group"
+                  className="absolute w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center z-20 transition-all duration-300 hover:scale-110 hover:shadow-lg group"
                   style={{ 
                     left: `calc(50% + ${x}px - 40px)`, 
                     top: `calc(50% + ${y}px - 40px)`,
                   }}
                 >
-                  <img 
-                    src={integration.logo} 
-                    alt={`${integration.name} logo`} 
-                    className="w-12 h-12 object-contain mb-1"
-                  />
-                  <span className="text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity text-lg-blue">
-                    {integration.name}
-                  </span>
+                  <div className="flex flex-col items-center">
+                    <img 
+                      src={integration.logo} 
+                      alt={`${integration.name} logo`} 
+                      className="w-10 h-10 object-contain"
+                    />
+                    <span className="text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity text-lg-blue mt-1">
+                      {integration.name}
+                    </span>
+                  </div>
                 </div>
               );
             })}
