@@ -88,77 +88,14 @@ const IntegrationsSection = () => {
           </p>
         </div>
         
-        {/* Integration Architecture Visualization - Simplified design without redundancy */}
+        {/* Integration Architecture Visualization - Using the new LG-DATA diagram */}
         <div className="relative mb-0">
-          <div className="relative w-full mx-auto max-w-3xl" style={{ height: "450px" }}>
-            {/* Center platform */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-lg flex items-center justify-center z-30 shadow-md" 
-                 style={{ backgroundColor: '#275E91' }}>
-              <div className="text-white text-center px-2">
-                <p className="font-bold text-base">Capital Match</p>
-                <p className="text-sm">AI Platform</p>
-                <div className="w-full h-0.5 bg-white/20 my-1.5"></div>
-                <p className="text-xs">Integration Hub</p>
-              </div>
-            </div>
-            
-            {/* Integration nodes - positioned in a circle around the center */}
-            {integrations.map((integration, index) => {
-              // Calculate position in a circle
-              const totalItems = integrations.length;
-              const angle = (Math.PI * 2 * index) / totalItems;
-              const radius = 180; // Radius for circle placement
-              const x = Math.cos(angle) * radius; 
-              const y = Math.sin(angle) * radius;
-              
-              return (
-                <div 
-                  key={index} 
-                  className="absolute w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center z-20 transition-all duration-300 hover:scale-110 hover:shadow-lg group"
-                  style={{ 
-                    left: `calc(50% + ${x}px - 40px)`, 
-                    top: `calc(50% + ${y}px - 40px)`,
-                  }}
-                >
-                  <div className="flex flex-col items-center">
-                    <img 
-                      src={integration.logo} 
-                      alt={`${integration.name} logo`} 
-                      className="w-10 h-10 object-contain"
-                    />
-                    <span className="text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity text-lg-blue mt-1">
-                      {integration.name}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-            
-            {/* Connection lines */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {integrations.map((_, index) => {
-                const totalItems = integrations.length;
-                const angle = (Math.PI * 2 * index) / totalItems;
-                const innerRadius = 8; // Central platform radius in %
-                const outerRadius = 36; // Outer circle radius in %
-                
-                // Calculate start and end points
-                const innerX = Math.cos(angle) * innerRadius + 50;
-                const innerY = Math.sin(angle) * innerRadius + 50;
-                const outerX = Math.cos(angle) * outerRadius + 50;
-                const outerY = Math.sin(angle) * outerRadius + 50;
-                
-                return (
-                  <path 
-                    key={index}
-                    d={`M${innerX} ${innerY} L${outerX} ${outerY}`} 
-                    stroke="#275E91" 
-                    strokeWidth="0.75" 
-                    strokeDasharray="3 2"
-                  />
-                );
-              })}
-            </svg>
+          <div className="relative w-full mx-auto max-w-3xl flex justify-center">
+            <img 
+              src="/assets/images/home/integrations/LG-DATA.webp" 
+              alt="LG Data Network Integration Diagram" 
+              className="max-w-full h-auto shadow-sm rounded-lg"
+            />
           </div>
         </div>
       </div>
