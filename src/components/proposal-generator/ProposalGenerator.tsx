@@ -410,31 +410,124 @@ export const ProposalGenerator: React.FC = () => {
                         {sections.executiveSummary && (
                           <div className="bg-white p-3 rounded border border-gray-200">
                             <div className="text-sm font-medium mb-1">Executive Summary</div>
-                            <div className="h-20 bg-gray-100 rounded-sm animate-pulse"></div>
+                            <div className="text-sm text-gray-700 space-y-2">
+                              <p>{generatedProposal.name} presents a compelling investment opportunity in the {generatedProposal.type} sector, located in {generatedProposal.location}.</p>
+                              <p>This {generatedProposal.units}-unit development is projected to deliver a {generatedProposal.irr}% IRR with a {generatedProposal.multiple}x equity multiple over the 5-year investment horizon.</p>
+                              <div className="flex space-x-2 mt-1">
+                                <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded">Premium Location</span>
+                                <span className="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded">Strong Cash Flow</span>
+                                <span className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 rounded">Tax Advantaged</span>
+                              </div>
+                            </div>
                           </div>
                         )}
                         {sections.financialProjections && (
                           <div className="bg-white p-3 rounded border border-gray-200">
                             <div className="text-sm font-medium mb-1">Financial Projections</div>
-                            <div className="h-32 bg-gray-100 rounded-sm animate-pulse"></div>
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-4 gap-2 text-xs">
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <div className="text-gray-500">Development Cost</div>
+                                  <div className="font-semibold">${generatedProposal.tdc}M</div>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <div className="text-gray-500">Equity Required</div>
+                                  <div className="font-semibold">${(generatedProposal.tdc * 0.35).toFixed(1)}M</div>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <div className="text-gray-500">Target IRR</div>
+                                  <div className="font-semibold">{generatedProposal.irr}%</div>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <div className="text-gray-500">Equity Multiple</div>
+                                  <div className="font-semibold">{generatedProposal.multiple}x</div>
+                                </div>
+                              </div>
+                              <div className="h-20 bg-gray-50 rounded flex items-center justify-center">
+                                <BarChart className="h-5 w-5 text-gray-400 mr-2" />
+                                <span className="text-xs text-gray-500">Annual Cash Flow Projection Chart</span>
+                              </div>
+                              <div className="text-xs text-gray-700">
+                                <p>• Year 1 Cash-on-Cash: 5.8%</p>
+                                <p>• Year 3 Cash-on-Cash: 7.2%</p>
+                                <p>• Year 5 Cash-on-Cash: 8.5%</p>
+                                <p>• Expected Disposition Cap Rate: 4.75%</p>
+                              </div>
+                            </div>
                           </div>
                         )}
                         {sections.marketAnalysis && (
                           <div className="bg-white p-3 rounded border border-gray-200">
                             <div className="text-sm font-medium mb-1">Market Analysis</div>
-                            <div className="h-24 bg-gray-100 rounded-sm animate-pulse"></div>
+                            <div className="text-sm text-gray-700 space-y-2">
+                              <p>The {generatedProposal.location} market demonstrates strong fundamentals with:</p>
+                              <ul className="list-disc pl-4 space-y-1 text-xs">
+                                <li>Population growth of 2.4% annually, outpacing national average</li>
+                                <li>Job growth rate of 3.1%, driven by technology and healthcare sectors</li>
+                                <li>Rental growth of 4.7% year-over-year</li>
+                                <li>Vacancy rates at historic low of 3.2%</li>
+                              </ul>
+                              <div className="flex space-x-1 mt-1">
+                                <div className="bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded">Strong Demand</div>
+                                <div className="bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded">Low Supply</div>
+                              </div>
+                            </div>
                           </div>
                         )}
                         {sections.competitiveAnalysis && (
                           <div className="bg-white p-3 rounded border border-gray-200">
                             <div className="text-sm font-medium mb-1">Competitive Analysis</div>
-                            <div className="h-24 bg-gray-100 rounded-sm animate-pulse"></div>
+                            <div className="text-sm text-gray-700 space-y-2">
+                              <p>Competitive positioning of {generatedProposal.name}:</p>
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="bg-gray-50 p-2 rounded text-center">
+                                  <div className="font-medium">Rents</div>
+                                  <div className="text-xs">10% premium</div>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded text-center">
+                                  <div className="font-medium">Amenities</div>
+                                  <div className="text-xs">Superior</div>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded text-center">
+                                  <div className="font-medium">Location</div>
+                                  <div className="text-xs">A+ Submarket</div>
+                                </div>
+                              </div>
+                              <p className="text-xs">Primary competitors include Apex Towers (0.5 miles) and Metro Heights (0.8 miles), both at 95%+ occupancy with waitlists.</p>
+                            </div>
                           </div>
                         )}
                         {sections.dealStructure && (
                           <div className="bg-white p-3 rounded border border-gray-200">
                             <div className="text-sm font-medium mb-1">Deal Structure</div>
-                            <div className="h-24 bg-gray-100 rounded-sm animate-pulse"></div>
+                            <div className="text-sm text-gray-700">
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-xs border-b pb-1">
+                                  <span>Total Equity Required:</span>
+                                  <span className="font-medium">${(generatedProposal.tdc * 0.35).toFixed(1)}M</span>
+                                </div>
+                                <div className="flex justify-between text-xs border-b pb-1">
+                                  <span>Minimum LP Investment:</span>
+                                  <span className="font-medium">$250,000</span>
+                                </div>
+                                <div className="flex justify-between text-xs border-b pb-1">
+                                  <span>Preferred Return:</span>
+                                  <span className="font-medium">8.0%</span>
+                                </div>
+                                <div className="flex justify-between text-xs border-b pb-1">
+                                  <span>Promote Structure:</span>
+                                  <span className="font-medium">80/20 split after 8% pref</span>
+                                </div>
+                                <div className="flex justify-between text-xs border-b pb-1">
+                                  <span>Target Hold Period:</span>
+                                  <span className="font-medium">5 years</span>
+                                </div>
+                              </div>
+                              <div className="mt-2 text-xs bg-blue-50 text-blue-700 p-2 rounded">
+                                <span className="font-medium">Key Advantage: </span>
+                                Tax-advantaged structure with potential 1031 exchange option at exit
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
