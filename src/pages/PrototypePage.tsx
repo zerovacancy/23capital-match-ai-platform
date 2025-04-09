@@ -20,8 +20,8 @@ const PrototypePage = () => {
     const tabLabels: Record<string, string> = {
       "dashboard": "Dashboard",
       "lp-profiles": "LP Profiles",
-      "deal-analyzer": "Deal Analyzer",
-      "matching-engine": "Matching Engine"
+      "deal-analyzer": "Smart Deal Sourcing",
+      "matching-engine": "LP Match + Personalized Outreach"
     };
     return tabLabels[activeTab] || "";
   };
@@ -42,7 +42,7 @@ const PrototypePage = () => {
             </div>
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">Capital Match AI Platform</h1>
-              <p className="text-gray-500">AI-powered capital raising for LG Development</p>
+              <p className="text-gray-500">AI-powered intelligence for real estate capital, development & design</p>
             </div>
           </div>
           
@@ -73,14 +73,14 @@ const PrototypePage = () => {
                   data-value="deal-analyzer"
                   className="data-[state=active]:bg-[#F8F5F0] data-[state=active]:text-[#275E91] hover:text-[#275E91] data-[state=active]:border-0 data-[state=active]:shadow-sm px-6"
                 >
-                  Deal Analyzer
+                  Smart Deal Sourcing
                 </TabsTrigger>
                 <TabsTrigger 
                   value="matching-engine" 
                   data-value="matching-engine"
                   className="data-[state=active]:bg-[#F8F5F0] data-[state=active]:text-[#275E91] hover:text-[#275E91] data-[state=active]:border-0 data-[state=active]:shadow-sm px-6"
                 >
-                  Matching Engine
+                  LP Match + Outreach
                 </TabsTrigger>
               </TabsList>
             </div>
