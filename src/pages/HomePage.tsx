@@ -6,7 +6,6 @@ import HeroSection from '@/components/HeroSection';
 import DivisionUseCasesSection from '@/components/DivisionUseCasesSection';
 import CapabilitiesSection from '@/components/CapabilitiesSection';
 import ArchitectureSection from '@/components/ArchitectureSection';
-import TimelineSection from '@/components/TimelineSection';
 import IntegrationsSection from '@/components/IntegrationsSection';
 import IntegrationVisualSection from '@/components/IntegrationVisualSection';
 import WhatsNextSection from '@/components/WhatsNextSection';
@@ -35,9 +34,6 @@ const HomePage = () => {
         </div>
         <div className="section-alternate">
           <WhatsNextSection />
-        </div>
-        <div className="section-primary">
-          <TimelineSection />
         </div>
         <div className="section-secondary">
           <IntegrationsSection />
