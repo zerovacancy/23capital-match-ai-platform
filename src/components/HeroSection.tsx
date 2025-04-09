@@ -1,11 +1,24 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Building2, ChevronDown } from "lucide-react";
 import PlatformVisualization from '@/components/visualization/PlatformVisualization';
+import useAnalytics from '@/hooks/use-analytics';
 
 const HeroSection = () => {
+  const analytics = useAnalytics();
+  
+  useEffect(() => {
+    // Track hero section view when component mounts
+    analytics.trackContentView('hero_section', 'homepage_section', 'Main Hero Section');
+  }, [analytics]);
+  
   const scrollToCapabilities = () => {
+    analytics.trackClick('scroll_to_capabilities', 'button', {
+      section: 'hero',
+      action: 'internal_navigation'
+    });
+    
     const element = document.getElementById('capabilities');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -72,7 +85,15 @@ const HeroSection = () => {
         
         {/* Enhanced CTA buttons with Primary Blue to 5B7B9C gradient */}
         <div className="flex flex-col sm:flex-row gap-4 mb-16 animate-fade-in animation-delay-500">
-          <a href="/platform" className="transition-transform hover:scale-105 focus:scale-105 group">
+          <a 
+            href="/platform" 
+            className="transition-transform hover:scale-105 focus:scale-105 group"
+            onClick={() => analytics.trackClick('explore_platform', 'primary_cta', {
+              section: 'hero',
+              destination: '/platform',
+              action: 'platform_navigation'
+            })}
+          >
             <Button className="bg-gradient-to-r from-[#275E91] to-[#5B7B9C] hover:from-[#275E91] hover:to-[#7A8D79] transition-all duration-300 px-8 py-6 text-lg rounded-md font-semibold text-white shadow-lg hover:shadow-xl flex items-center gap-2 group-hover:gap-3 relative overflow-hidden">
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-[#275E91]/80 to-[#5B7B9C]/80 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
               <span className="relative z-10 flex items-center gap-2 group-hover:gap-3">
@@ -83,7 +104,13 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             className="border-[#275E91] text-[#275E91] px-8 py-6 text-lg hover:bg-[#275E91]/10 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group" 
-            onClick={scrollToCapabilities}
+            onClick={(e) => {
+              analytics.trackClick('view_features', 'secondary_cta', {
+                section: 'hero',
+                action: 'features_navigation'
+              });
+              scrollToCapabilities();
+            }}
           >
             <span className="absolute inset-0 w-0 bg-gradient-to-r from-[#275E91]/10 to-[#5B7B9C]/10 group-hover:w-full transition-all duration-500"></span>
             <span className="relative z-10">View Features</span>
@@ -93,7 +120,13 @@ const HeroSection = () => {
         {/* Enhanced scroll indicator with Primary Blue and Section Highlight */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float">
           <button 
-            onClick={scrollToCapabilities} 
+            onClick={(e) => {
+              analytics.trackClick('scroll_down_chevron', 'navigation', {
+                section: 'hero',
+                action: 'scroll_to_capabilities'
+              });
+              scrollToCapabilities();
+            }}
             className="flex flex-col items-center text-[#4F5D75]/60 hover:text-[#275E91] transition-all duration-300 transform hover:scale-110 group"
           >
             <span className="text-sm mb-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[#C9D4DC]/20 px-3 py-1 rounded-full">Scroll to explore</span>
