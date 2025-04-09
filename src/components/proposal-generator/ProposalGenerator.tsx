@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, ExternalLink, Table, BarChart, Check, X, ArrowRight, ChevronRight, Maximize2, Eye, Clock } from 'lucide-react';
+import { FileText, Download, ExternalLink, Table, BarChart, Check, X, ArrowRight, ChevronRight, Maximize2, Eye, Clock, Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -121,13 +121,21 @@ export const ProposalGenerator: React.FC = () => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-full">
       <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center mb-1">
-          <div className="p-2 bg-[#F8F5F0] rounded-md mr-3">
-            <FileText className="h-5 w-5 text-[#275E91]" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center mb-1">
+            <div className="p-2 bg-[#F8F5F0] rounded-md mr-3">
+              <FileText className="h-5 w-5 text-[#275E91]" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Proposal + Pro Forma Generator</h2>
+              <p className="text-gray-500">Auto-generate pro formas, investment summaries, and LP-ready proposals based on structured deal data and investor criteria.</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Proposal + Pro Forma Generator</h2>
-            <p className="text-gray-500">Auto-generate pro formas, investment summaries, and LP-ready proposals based on structured deal data and investor criteria.</p>
+          
+          <div className="flex-shrink-0">
+            <Button className="bg-[#275E91] hover:bg-[#1E4A73] text-white">
+              <Plus className="mr-2 h-4 w-4" /> Generate New Proposal
+            </Button>
           </div>
         </div>
       </div>
@@ -443,48 +451,9 @@ export const ProposalGenerator: React.FC = () => {
                                   <div className="font-semibold">{generatedProposal.multiple}x</div>
                                 </div>
                               </div>
-                              <div className="bg-gray-50 rounded p-2">
-                                <div className="text-xs text-gray-500 mb-1 font-medium">Annual Cash Flow Projection ($M)</div>
-                                <div className="relative h-16">
-                                  {/* Year labels */}
-                                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-500 px-1">
-                                    <span>Y1</span>
-                                    <span>Y2</span>
-                                    <span>Y3</span>
-                                    <span>Y4</span>
-                                    <span>Y5</span>
-                                  </div>
-
-                                  {/* Bars */}
-                                  <div className="absolute bottom-4 left-0 right-0 flex justify-between items-end h-9 px-1">
-                                    <div style={{ height: '40%' }} className="w-12 bg-blue-400 rounded-t"></div>
-                                    <div style={{ height: '55%' }} className="w-12 bg-blue-500 rounded-t"></div>
-                                    <div style={{ height: '70%' }} className="w-12 bg-blue-600 rounded-t"></div>
-                                    <div style={{ height: '85%' }} className="w-12 bg-blue-700 rounded-t"></div>
-                                    <div style={{ height: '100%' }} className="w-12 bg-blue-800 rounded-t relative">
-                                      <div className="absolute -top-4 left-0 right-0 text-center text-xs text-blue-800 font-semibold">
-                                        $7.2M
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Value labels */}
-                                  <div className="absolute bottom-4 left-0 right-0 flex justify-between items-end h-9 px-1 pointer-events-none">
-                                    <div style={{ height: '40%' }} className="w-12 flex justify-center">
-                                      <div className="text-[9px] text-white font-medium -mt-3">$2.8M</div>
-                                    </div>
-                                    <div style={{ height: '55%' }} className="w-12 flex justify-center">
-                                      <div className="text-[9px] text-white font-medium -mt-3">$3.9M</div>
-                                    </div>
-                                    <div style={{ height: '70%' }} className="w-12 flex justify-center">
-                                      <div className="text-[9px] text-white font-medium -mt-3">$5.0M</div>
-                                    </div>
-                                    <div style={{ height: '85%' }} className="w-12 flex justify-center">
-                                      <div className="text-[9px] text-white font-medium -mt-3">$6.1M</div>
-                                    </div>
-                                    <div style={{ height: '100%' }} className="w-12"></div>
-                                  </div>
-                                </div>
+                              <div className="h-20 bg-gray-50 rounded flex items-center justify-center">
+                                <BarChart className="h-5 w-5 text-gray-400 mr-2" />
+                                <span className="text-xs text-gray-500">Annual Cash Flow Projection Chart</span>
                               </div>
                               <div className="text-xs text-gray-700">
                                 <p>• Year 1 Cash-on-Cash: 5.8%</p>

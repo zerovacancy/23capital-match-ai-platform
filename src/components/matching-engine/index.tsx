@@ -3,6 +3,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { matches } from '@/data';
 import { MatchCard } from './MatchCard';
 import { MatchDetail } from './MatchDetail';
@@ -34,15 +36,25 @@ export function MatchingEngine() {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center mb-1">
-          <div className="p-2 bg-[#F8F5F0] rounded-md mr-3 flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#275E91]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-            </svg>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center mb-1">
+            <div className="p-2 bg-[#F8F5F0] rounded-md mr-3 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#275E91]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Matching Algorithm</h2>
+              <p className="text-gray-500">Match deals with appropriate LPs based on criteria alignment</p>
+            </div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900">Matching Algorithm</h2>
+          
+          <div className="flex-shrink-0">
+            <Button className="bg-[#275E91] hover:bg-[#1E4A73] text-white">
+              <Plus className="mr-2 h-4 w-4" /> Log New Commitment
+            </Button>
+          </div>
         </div>
-        <p className="text-gray-500 ml-10">Match deals with appropriate LPs based on criteria alignment</p>
       </div>
       
       <div className="p-6 grid grid-cols-12 gap-6 h-[calc(100%-5rem)]">

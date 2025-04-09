@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PieChart, LineChart, ChevronRight, Filter, Building, Users, ArrowRight, Maximize2 } from 'lucide-react';
+import { PieChart, LineChart, ChevronRight, Filter, Building, Users, ArrowRight, Maximize2, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { CapitalProgressCard } from './CapitalProgressCard';
 import { CapitalSourceChart } from './CapitalSourceChart';
@@ -83,6 +83,11 @@ export function UnifiedDashboard() {
         <div>
           <h2 className="h2">LG Development Capital Match</h2>
           <p className="text-muted-foreground max-w-xl">Unified view of capital raising activities</p>
+        </div>
+        <div className="flex-shrink-0">
+          <Button className="bg-[#275E91] hover:bg-[#1E4A73] text-white">
+            <Plus className="mr-2 h-4 w-4" /> Create New Report
+          </Button>
         </div>
       </div>
       

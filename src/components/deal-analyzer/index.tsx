@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { deals } from '@/data';
 import { DealCard } from './DealCard';
 import { DealDetail } from './DealDetail';
@@ -29,16 +31,26 @@ export function DealAnalyzer() {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center mb-1">
-          <div className="p-2 bg-[#F8F5F0] rounded-md mr-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#275E91]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center mb-1">
+            <div className="p-2 bg-[#F8F5F0] rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#275E91]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Deal Analysis Engine</h2>
+              <p className="text-gray-500">Analyze and standardize deal metrics for consistent evaluation</p>
+            </div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900">Deal Analysis Engine</h2>
+          
+          <div className="flex-shrink-0">
+            <Button className="bg-[#275E91] hover:bg-[#1E4A73] text-white">
+              <Plus className="mr-2 h-4 w-4" /> Add New Deal
+            </Button>
+          </div>
         </div>
-        <p className="text-gray-500 ml-10">Analyze and standardize deal metrics for consistent evaluation</p>
       </div>
       
       <div className="p-6 grid grid-cols-12 gap-6 h-[calc(100%-5rem)]">
