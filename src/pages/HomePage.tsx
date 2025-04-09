@@ -19,28 +19,45 @@ const HomePage = () => {
       <Header />
       <BreadcrumbNav />
       <main>
+        {/* 1. Hero Section */}
         <HeroSection />
+        
+        {/* 2. AI Workflows Tailored to Each Division */}
         <div className="section-primary">
           <DivisionUseCasesSection />
         </div>
+        
+        {/* 3. How It Works: Connect Your Data, Unlock New Value */}
         <div className="section-secondary">
-          <CapabilitiesSection />
-        </div>
-        <div className="section-primary">
           <IntegrationVisualSection />
         </div>
+        
+        {/* 4. Core Capabilities */}
+        <div className="section-primary">
+          <CapabilitiesSection />
+        </div>
+        
+        {/* 5. Integration Ecosystem */}
         <div className="section-tertiary">
-          <ArchitectureSection />
-        </div>
-        <div className="section-alternate">
-          <WhatsNextSection />
-        </div>
-        <div className="section-secondary">
           <IntegrationsSection />
         </div>
+        
+        {/* 6. Platform Architecture */}
+        <div className="section-secondary">
+          <ArchitectureSection />
+        </div>
+        
+        {/* 7. Value Proposition */}
         <div className="section-tertiary">
           <ValueSection />
         </div>
+        
+        {/* 8. What We're Prioritizing First */}
+        <div className="section-alternate">
+          <WhatsNextSection />
+        </div>
+        
+        {/* 9. Contact Section (before Footer) */}
         <div className="section-alternate">
           <ContactSection />
         </div>

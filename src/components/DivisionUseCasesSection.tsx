@@ -3,7 +3,7 @@ import { Building, GitBranch, LayoutTemplate } from 'lucide-react';
 
 const DivisionUseCasesSection = () => {
   return (
-    <div className="py-16 relative overflow-hidden" id="division-use-cases">
+    <div className="py-16 relative overflow-hidden" id="division-workflows">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16">
           <h2 className="section-title text-[#275E91] mb-3">AI Workflows Tailored to Each Division</h2>

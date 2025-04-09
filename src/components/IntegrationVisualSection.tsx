@@ -3,7 +3,7 @@ import { Database, Mail, GitMerge, FileText, BarChart } from 'lucide-react';
 
 const IntegrationVisualSection = () => {
   return (
-    <div className="py-16 relative overflow-hidden" id="integration-visual">
+    <div className="py-16 relative overflow-hidden" id="how-it-works">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16">
           <h2 className="section-title text-[#275E91] mb-3">How It Works: Connect Your Data, Unlock New Value</h2>
