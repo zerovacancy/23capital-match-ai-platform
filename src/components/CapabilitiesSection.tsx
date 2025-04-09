@@ -128,7 +128,9 @@ const CapabilitiesSection = () => {
         "Scenario modeling with variable inputs",
         "Historical market trend analysis",
         "Risk assessment calibration",
-        "Geospatial opportunity mapping"
+        "Geospatial opportunity mapping",
+        "Investor-specific reporting",
+        "Automated data verification"
       ],
       themeColor: "#275E91",
       lightColor: "#F8F5F0"
@@ -206,7 +208,7 @@ const CapabilitiesSection = () => {
                 ))}
               </div>
               
-              <div className="mt-6 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="mt-6 p-4 bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Investor Profile Summary</h4>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between items-center">
@@ -228,16 +230,28 @@ const CapabilitiesSection = () => {
                 </div>
                 <div className="text-xs text-center text-gray-500 italic">Last updated: 2 days ago</div>
               </div>
+              
+              <div className="text-center mb-4">
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#275E91] text-white text-sm font-medium rounded-md shadow-sm hover:bg-[#1d4b77] transition-colors">
+                  <UserRound className="w-4 h-4" />
+                  View Investor Profile
+                </button>
+              </div>
             </div>
           </div>
         );
       
       case 1:
         return (
-          <div className="relative z-10 h-full flex flex-col justify-center items-center">
-            <div className="w-full max-w-[300px]">
-              <div className="text-sm text-gray-700 font-medium mb-3">Deal Analysis: The Apex at River North</div>
-              
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="relative w-full max-w-[300px] mx-auto">
+              <div className="relative z-10 h-16 w-16 mx-auto rounded-full border-2 border-[#275E91] bg-white flex items-center justify-center mb-6">
+                <BarChart2 className="h-8 w-8 text-[#275E91]" />
+                <div className="absolute top-0 right-0 h-5 w-5 rounded-full bg-[#275E91] text-white flex items-center justify-center text-xs font-bold">
+                  <CheckCircle2 className="h-3 w-3" />
+                </div>
+              </div>
+
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Projected Returns</h4>
                 <div className="grid grid-cols-3 gap-4 w-full mx-auto">
@@ -250,7 +264,7 @@ const CapabilitiesSection = () => {
                 </div>
               </div>
               
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Capital Structure</h4>
                 <div className="relative h-4 w-full bg-gray-100 rounded-full overflow-hidden mb-2">
                   <div className="absolute inset-y-0 left-0 bg-[#275E91]" style={{ width: '65%' }}></div>
@@ -268,6 +282,13 @@ const CapabilitiesSection = () => {
                     <span className="text-gray-500">$22.9M</span>
                   </div>
                 </div>
+              </div>
+              
+              <div className="text-center mb-4">
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#275E91] text-white text-sm font-medium rounded-md shadow-sm hover:bg-[#1d4b77] transition-colors">
+                  <PieChart className="w-4 h-4" />
+                  View Analysis
+                </button>
               </div>
             </div>
           </div>
@@ -324,7 +345,7 @@ const CapabilitiesSection = () => {
                 </div>
               </div>
               
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#275E91] text-white text-sm font-medium rounded-md shadow-sm hover:bg-[#1d4b77] transition-colors">
                   <CheckCircle2 className="w-4 h-4" />
                   Send Match Notification
@@ -387,7 +408,7 @@ const CapabilitiesSection = () => {
                 </div>
               </div>
               
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#275E91] text-white text-sm font-medium rounded-md shadow-sm hover:bg-[#1d4b77] transition-colors">
                   <Eye className="w-4 h-4" />
                   Preview Report
@@ -464,10 +485,10 @@ const CapabilitiesSection = () => {
       </div>
       
       {/* Capabilities Cards - Redesigned with tabbed interface */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 max-w-5xl mx-auto grid-flow-row-dense">
         {capabilities.map((capability, index) => (
           <div key={index} className="flex flex-col group">
-            <Card className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden h-full group-hover:shadow-md transition-all duration-300">
+            <Card className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden h-full group-hover:shadow-md transition-all duration-300 flex flex-col">
               <CardHeader className="pb-0 relative">
                 {/* Preview button that appears on hover */}
                 <button 
@@ -481,7 +502,7 @@ const CapabilitiesSection = () => {
                 {/* Card header with icon */}
                 <div className="flex items-start mb-4">
                   <div
-                    className="w-12 h-12 rounded-md flex items-center justify-center mr-3 flex-shrink-0"
+                    className="w-12 h-12 rounded-full flex items-center justify-center mr-3 flex-shrink-0"
                     style={{ backgroundColor: "#F8F5F0" }}
                   >
                     {React.cloneElement(capability.icon as React.ReactElement, {
@@ -517,10 +538,11 @@ const CapabilitiesSection = () => {
                 </div>
               </CardHeader>
               
-              <CardContent className="pt-5">
+              <CardContent className="pt-5 flex flex-col h-full">
                 {/* Tab content */}
                 {activeTab[index] === 'summary' && (
-                  <div className="space-y-4">
+                  <div className="flex flex-col flex-1">
+                    <div className="space-y-5 flex-1">
                     {/* Key Benefits */}
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-3">Key Benefits</h4>
@@ -553,8 +575,9 @@ const CapabilitiesSection = () => {
                       </div>
                     </div>
                     
+                    </div>
                     {/* Preview button */}
-                    <div className="mt-auto pt-2">
+                    <div className="flex-shrink-0 mt-6 pt-4 border-t border-gray-100">
                       <button
                         onClick={() => setPreviewModal(index)}
                         className="w-full py-2 rounded-md border border-[#275E91] text-[#275E91] text-sm font-medium hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2"
@@ -566,7 +589,22 @@ const CapabilitiesSection = () => {
                   </div>
                 )}
                 
-                {activeTab[index] === 'metrics' && renderMetrics(capability)}
+                {activeTab[index] === 'metrics' && (
+                  <div className="flex flex-col h-full">
+                    <div className="mb-6">
+                      {renderMetrics(capability)}
+                    </div>
+                    <div className="flex-shrink-0 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => setPreviewModal(index)}
+                        className="w-full py-2 rounded-md border border-[#275E91] text-[#275E91] text-sm font-medium hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Preview
+                      </button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
