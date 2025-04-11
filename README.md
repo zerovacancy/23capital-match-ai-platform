@@ -119,6 +119,24 @@ npm run dev
 npm run build
 ```
 
+## Social Media Sharing
+
+The project includes OpenGraph meta tags and dynamic image generation for optimal social media sharing:
+
+- **OpenGraph Image**: Automatically generated during build process using Puppeteer
+- **Image Location**: `/public/assets/images/social/og-image.png`
+- **Image Template**: Can be edited at `/public/assets/images/social/og-template.html`
+
+You can manually regenerate the OpenGraph image with:
+```bash
+npm run generate-og
+```
+
+The build process automatically:
+1. Generates the OpenGraph image from the HTML template
+2. Updates relative URLs to absolute URLs for production deployment
+3. Ensures proper metadata for LinkedIn, Twitter, and Facebook sharing
+
 ## Demo Access
 
 The interactive prototype is available at:
