@@ -17,7 +17,12 @@ async function updateOgUrls() {
   const indexPath = path.join(__dirname, '../dist/index.html');
   
   if (!fs.existsSync(indexPath)) {
-    console.error('Error: dist/index.html not found. Run build first.');
+    console.error('Error: dist/index.html not found. This is expected in local development.');
+    // Don't exit with error in Vercel environment
+    if (process.env.VERCEL === '1') {
+      console.log('Running in Vercel environment, continuing despite missing dist/index.html');
+      return;
+    }
     process.exit(1);
   }
   
@@ -34,6 +39,10 @@ async function updateOgUrls() {
     console.log('OpenGraph URLs updated successfully');
   } catch (error) {
     console.error('Error updating OpenGraph URLs:', error);
+    // Don't exit with error in Vercel environment
+    if (process.env.VERCEL !== '1') {
+      process.exit(1);
+    }
   }
 }
 

@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-og": "node scripts/generate-og-image.js",
-    "update-og-urls": "node scripts/update-og-urls.js"
+    "update-og-urls": "node scripts/update-og-urls.js",
+    "postinstall": "node -e \"process.env.VERCEL === '1' || process.exit(0)\" || npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
