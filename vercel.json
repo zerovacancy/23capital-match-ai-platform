@@ -11,6 +11,12 @@
       ]
     }
   ],
+  "redirects": [
+    { "source": "/docs", "destination": "/api/docs", "permanent": false }
+  ],
+  "routes": [
+    { "src": "/docs", "dest": "/docs.html" }
+  ],
   "rewrites": [
     { "source": "/api/openapi/zoning", "destination": "/api/openapi-zoning" },
     { "source": "/api/openapi/investor-match", "destination": "/api/openapi-investor-match" },
