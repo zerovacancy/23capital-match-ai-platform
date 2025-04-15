@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import PrototypePage from "./pages/PrototypePage";
 import PlatformPage from "./pages/PlatformPage";
 import TestPage from "./pages/TestPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Analytics from "@/lib/analytics";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/prototype" element={<PrototypePage />} />
           <Route path="/platform" element={<PlatformPage />} />
           <Route path="/test" element={<TestPage />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

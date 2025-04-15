@@ -107,7 +107,7 @@ const Footer = () => {
                 <h4 className="text-base font-semibold text-gray-900 mb-4">Legal</h4>
                 <ul className="space-y-3">
                   <li>
-                    <a href="#" className="text-gray-600 hover:text-[#275E91] transition-colors flex items-center group">
+                    <a href="/privacy" className="text-gray-600 hover:text-[#275E91] transition-colors flex items-center group">
                       <span className="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-[#275E91] mr-2 transition-colors"></span>
                       Privacy Policy
                     </a>
