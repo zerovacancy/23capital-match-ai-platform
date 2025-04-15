@@ -1,26 +1,221 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import yaml from 'js-yaml';
 
-export async function GET() {
-  try {
-    // Path to the YAML schema file
-    const schemaPath = path.join(process.cwd(), 'public', 'openapi', 'investor-match-schema.yaml');
-    
-    // Read the YAML file
-    const yamlContent = fs.readFileSync(schemaPath, 'utf8');
-    
-    // Convert YAML to JSON
-    const jsonSchema = yaml.load(yamlContent);
-    
-    // Return the schema as JSON
-    return NextResponse.json(jsonSchema);
-  } catch (error) {
-    console.error('Error serving OpenAPI schema:', error);
-    return NextResponse.json(
-      { error: 'Failed to load OpenAPI schema' },
-      { status: 500 }
-    );
+// Define the schema directly in this file
+const schema = {
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Investor Matching API",
+    "description": "An API to match real estate deals with potential investors based on preferences and criteria.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://capital-match-ai-platform.vercel.app/api",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/investor-match": {
+      "post": {
+        "summary": "Find investors that match a given real estate deal",
+        "operationId": "matchInvestors",
+        "tags": [
+          "Investor Matching"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "assetType",
+                  "market",
+                  "investmentAmount",
+                  "expectedReturn",
+                  "riskProfile"
+                ],
+                "properties": {
+                  "assetType": {
+                    "type": "string",
+                    "description": "The type of real estate asset",
+                    "example": "multifamily",
+                    "enum": [
+                      "multifamily",
+                      "office",
+                      "industrial",
+                      "retail",
+                      "hotel",
+                      "student housing",
+                      "mixed-use"
+                    ]
+                  },
+                  "market": {
+                    "type": "string",
+                    "description": "The geographic market/city where the property is located",
+                    "example": "Chicago"
+                  },
+                  "investmentAmount": {
+                    "type": "number",
+                    "description": "The amount of investment required in USD",
+                    "example": 5000000
+                  },
+                  "expectedReturn": {
+                    "type": "number",
+                    "description": "The expected annual return percentage",
+                    "example": 12
+                  },
+                  "riskProfile": {
+                    "type": "string",
+                    "description": "The risk level of the investment",
+                    "example": "moderate",
+                    "enum": [
+                      "low",
+                      "moderate",
+                      "high"
+                    ]
+                  },
+                  "projectName": {
+                    "type": "string",
+                    "description": "Optional name of the project/property",
+                    "example": "Lakeview Apartments"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Optional brief description of the investment opportunity",
+                    "example": "256-unit apartment complex in Lakeview neighborhood"
+                  },
+                  "timeline": {
+                    "type": "string",
+                    "description": "Optional timeline for the investment",
+                    "example": "5 years"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully matched investors with the deal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deal": {
+                      "type": "object",
+                      "properties": {
+                        "assetType": {
+                          "type": "string",
+                          "example": "multifamily"
+                        },
+                        "market": {
+                          "type": "string",
+                          "example": "Chicago"
+                        },
+                        "investmentAmount": {
+                          "type": "number",
+                          "example": 5000000
+                        },
+                        "expectedReturn": {
+                          "type": "number",
+                          "example": 12
+                        },
+                        "riskProfile": {
+                          "type": "string",
+                          "example": "moderate"
+                        }
+                      }
+                    },
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "investorId": {
+                            "type": "string",
+                            "example": "INV001"
+                          },
+                          "investorName": {
+                            "type": "string",
+                            "example": "Blackstone Real Estate"
+                          },
+                          "matchScore": {
+                            "type": "number",
+                            "example": 85
+                          },
+                          "matchDetails": {
+                            "type": "object",
+                            "properties": {
+                              "assetTypeMatch": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "marketMatch": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "investmentSizeMatch": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "returnExpectationMatch": {
+                                "type": "boolean",
+                                "example": false
+                              },
+                              "riskProfileMatch": {
+                                "type": "boolean",
+                                "example": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalMatches": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing required parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Missing required field: assetType"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
+};
+
+export async function GET(request: Request) {
+  // Add CORS headers
+  const headers = new Headers();
+  headers.append('Access-Control-Allow-Origin', '*');
+  headers.append('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  headers.append('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 204, headers });
+  }
+  
+  // Return the schema as JSON with CORS headers
+  return NextResponse.json(schema, { headers });
 }
