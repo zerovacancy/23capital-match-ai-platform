@@ -491,21 +491,52 @@ function generateMockParcelData(lat: number, lng: number, city?: string): Parcel
     pin = `${latPart}${lngPart}${random}`;
   }
   
-  // Determine property class based on mock zoning
-  const zoningData = getMockZoningData(lat, lng);
+  // Determine property class based on appropriate city's mock zoning
   let propertyClass = '2-00'; // Default residential
   
-  if (zoningData.zoning_classification.startsWith('D')) {
-    propertyClass = '5-95'; // Commercial downtown
-  } else if (zoningData.zoning_classification.startsWith('B')) {
-    propertyClass = '5-91'; // Commercial
-  } else if (zoningData.zoning_classification.startsWith('M')) {
-    propertyClass = '5-97'; // Industrial
-  } else if (zoningData.zoning_classification.startsWith('R')) {
-    if (zoningData.zoning_classification.includes('T')) {
-      propertyClass = '2-11'; // Multi-unit residential
+  if (city?.toLowerCase() === 'denver') {
+    // Denver-specific property classes
+    const denverZoning = getMockZoningDataForCity(lat, lng, 'denver');
+    if (denverZoning.zoning_classification.startsWith('C-MX')) {
+      propertyClass = 'COM-MX'; // Commercial mixed-use
+    } else if (denverZoning.zoning_classification.startsWith('I-')) {
+      propertyClass = 'IND'; // Industrial
+    } else if (denverZoning.zoning_classification.startsWith('G-MU')) {
+      propertyClass = 'RES-MU'; // Residential mixed-use
+    } else if (denverZoning.zoning_classification.startsWith('U-SU')) {
+      propertyClass = 'RES-SU'; // Residential single-unit
+    }
+  } else if (city?.toLowerCase() === 'charlotte' || city?.toLowerCase() === 'raleigh' || 
+             city?.toLowerCase() === 'nashville') {
+    // Use city-specific zoning patterns for other cities
+    const cityZoning = getMockZoningDataForCity(lat, lng, city);
+    if (cityZoning.zoning_classification.includes('MU') || 
+        cityZoning.zoning_classification.includes('MX')) {
+      propertyClass = 'MXD'; // Mixed-use
+    } else if (cityZoning.zoning_classification.includes('IND') || 
+              cityZoning.zoning_classification.includes('I-')) {
+      propertyClass = 'IND'; // Industrial
+    } else if (cityZoning.zoning_classification.includes('RES') || 
+              cityZoning.zoning_classification.startsWith('R')) {
+      propertyClass = 'RES'; // Residential
     } else {
-      propertyClass = '2-03'; // Single family
+      propertyClass = 'COM'; // Commercial (default for urban zoning)
+    }
+  } else {
+    // Chicago-style property classes (default)
+    const chicagoZoning = getMockZoningData(lat, lng);
+    if (chicagoZoning.zoning_classification.startsWith('D')) {
+      propertyClass = '5-95'; // Commercial downtown
+    } else if (chicagoZoning.zoning_classification.startsWith('B')) {
+      propertyClass = '5-91'; // Commercial
+    } else if (chicagoZoning.zoning_classification.startsWith('M')) {
+      propertyClass = '5-97'; // Industrial
+    } else if (chicagoZoning.zoning_classification.startsWith('R')) {
+      if (chicagoZoning.zoning_classification.includes('T')) {
+        propertyClass = '2-11'; // Multi-unit residential
+      } else {
+        propertyClass = '2-03'; // Single family
+      }
     }
   }
   
@@ -525,7 +556,7 @@ function generateMockParcelData(lat: number, lng: number, city?: string): Parcel
     parcelData.township_name = 'CHICAGO';
   } else if (city.toLowerCase() === 'denver') {
     // Denver doesn't use townships, but has assessor districts
-    // Omit township_name completely
+    parcelData.township_name = 'DENVER COUNTY'; // Add proper county name instead of omitting
   } else if (city.toLowerCase() === 'nashville') {
     parcelData.township_name = 'DAVIDSON COUNTY';
   } else if (city.toLowerCase() === 'charlotte' || city.toLowerCase() === 'raleigh') {
