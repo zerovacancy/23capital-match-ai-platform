@@ -39,22 +39,38 @@ const KNOWN_ADDRESSES = {
   "United Center": { lat: 41.8806, lng: -87.6742 }
 };
 
+// City center coordinates for fallback
+const CITY_FALLBACK_COORDINATES = {
+  chicago: { lat: 41.8781, lng: -87.6298 },
+  denver: { lat: 39.7392, lng: -104.9903 },
+  charlotte: { lat: 35.2271, lng: -80.8431 },
+  raleigh: { lat: 35.7796, lng: -78.6382 },
+  nashville: { lat: 36.1627, lng: -86.7816 }
+};
+
 // Function to geocode an address - first checks known addresses, then uses Open Street Map
-async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
+async function geocodeAddress(address: string, city?: string): Promise<GeocodingResult | null> {
   try {
-    console.log(`Geocoding address: ${address}`);
+    console.log(`Geocoding address: ${address} in city: ${city || 'unknown'}`);
     
-    // Check if address contains any of our known landmarks
-    for (const [landmark, coords] of Object.entries(KNOWN_ADDRESSES)) {
-      if (address.toLowerCase().includes(landmark.toLowerCase())) {
-        console.log(`Found known address match for: ${landmark}`);
-        return coords;
+    // Default to Chicago if no city specified
+    const targetCity = (city || 'chicago').toLowerCase();
+    
+    // Check if address contains any of our known landmarks (for Chicago)
+    if (targetCity === 'chicago') {
+      for (const [landmark, coords] of Object.entries(KNOWN_ADDRESSES)) {
+        if (address.toLowerCase().includes(landmark.toLowerCase())) {
+          console.log(`Found known address match for: ${landmark}`);
+          return coords;
+        }
       }
     }
     
     // If not a known address, try OpenStreetMap's Nominatim service (no API key required)
     // Note: For production, respect the usage policy by adding proper caching and rate limiting
-    const encodedAddress = encodeURIComponent(address + " Chicago");
+    // Include city name to improve geocoding accuracy
+    const cityToInclude = targetCity.charAt(0).toUpperCase() + targetCity.slice(1);
+    const encodedAddress = encodeURIComponent(`${address}, ${cityToInclude}`);
     console.log(`Encoded address for OSM: ${encodedAddress}`);
     
     const response = await axios.get(
@@ -76,13 +92,21 @@ async function geocodeAddress(address: string): Promise<GeocodingResult | null> 
       };
     }
     
-    // As a last resort, return Chicago's center coordinates
-    console.log('No geocoding result found, using Chicago fallback coordinates');
-    return CHICAGO_FALLBACK_COORDINATES;
+    // As a last resort, return the appropriate city's center coordinates
+    const fallbackCoords = CITY_FALLBACK_COORDINATES[targetCity as keyof typeof CITY_FALLBACK_COORDINATES] || 
+                          CITY_FALLBACK_COORDINATES.chicago; // Default to Chicago if city not found
+    
+    console.log(`No geocoding result found, using ${targetCity} fallback coordinates`);
+    return fallbackCoords;
   } catch (error) {
     console.error('Error geocoding address:', error);
-    console.log('Error occurred during geocoding, using Chicago fallback coordinates');
-    return CHICAGO_FALLBACK_COORDINATES;
+    
+    // Get fallback coordinates for the specified city
+    const fallbackCoords = CITY_FALLBACK_COORDINATES[targetCity as keyof typeof CITY_FALLBACK_COORDINATES] || 
+                          CITY_FALLBACK_COORDINATES.chicago; // Default to Chicago if city not found
+    
+    console.log(`Error occurred during geocoding, using ${targetCity} fallback coordinates`);
+    return fallbackCoords;
   }
 }
 
@@ -110,37 +134,130 @@ const MOCK_ZONING_DATA = {
   }
 };
 
-// Function to fetch zoning data from Chicago's dataset
-async function fetchZoningData(lat: number, lng: number): Promise<ZoningData | null> {
-  try {
-    console.log(`Fetching zoning data for coordinates: ${lat}, ${lng}`);
-    
-    // Try to get data from Chicago's dataset via Socrata Open Data API (SODA)
-    const response = await axios.get(
-      'https://data.cityofchicago.org/resource/nifi-zqag.json',
-      {
-        params: {
-          $where: `within_circle(geometry, ${lat}, ${lng}, 100)`, // 100 meters radius
-          $limit: 1
-        }
-      }
-    );
+// City-specific zoning classifications and descriptions
+const CITY_ZONING_DATA = {
+  denver: {
+    downtown: { zoning_classification: 'C-MX-8', description: 'Urban Center Mixed-Use 8' },
+    commercial: { zoning_classification: 'C-MX-5', description: 'Urban Center Mixed-Use 5' },
+    residential_high: { zoning_classification: 'G-MU-3', description: 'General Urban Medium Density 3' },
+    residential_low: { zoning_classification: 'U-SU-C', description: 'Urban Single Unit C' },
+    industrial: { zoning_classification: 'I-MX-3', description: 'Industrial Mixed-Use 3' }
+  },
+  charlotte: {
+    downtown: { zoning_classification: 'UMUD', description: 'Uptown Mixed Use District' },
+    commercial: { zoning_classification: 'MUDD', description: 'Mixed-Use Development District' },
+    residential_high: { zoning_classification: 'R-8', description: 'Residential 8 units/acre' },
+    residential_low: { zoning_classification: 'R-3', description: 'Residential 3 units/acre' },
+    industrial: { zoning_classification: 'I-1', description: 'Light Industrial' }
+  },
+  raleigh: {
+    downtown: { zoning_classification: 'DX-12', description: 'Downtown Mixed Use 12 Stories' },
+    commercial: { zoning_classification: 'CX-4', description: 'Commercial Mixed Use 4 Stories' },
+    residential_high: { zoning_classification: 'RX-4', description: 'Residential Mixed Use 4 Stories' },
+    residential_low: { zoning_classification: 'R-4', description: 'Residential 4 units/acre' },
+    industrial: { zoning_classification: 'IX-3', description: 'Industrial Mixed Use 3 Stories' }
+  },
+  nashville: {
+    downtown: { zoning_classification: 'CF', description: 'Core Frame' },
+    commercial: { zoning_classification: 'MUG', description: 'Mixed-Use General' },
+    residential_high: { zoning_classification: 'RM20', description: 'Multi-Family 20 units/acre' },
+    residential_low: { zoning_classification: 'RS5', description: 'Single-Family 5 units/acre' },
+    industrial: { zoning_classification: 'IWD', description: 'Industrial Warehousing/Distribution' }
+  }
+};
 
-    if (response.data && response.data.length > 0) {
-      console.log(`Found zoning data: ${JSON.stringify(response.data[0])}`);
-      return {
-        zoning_classification: response.data[0].zoning_classification || 'Unknown',
-        description: response.data[0].zone_class_description || undefined
-      };
+// Function to fetch zoning data from appropriate city dataset
+async function fetchZoningData(lat: number, lng: number, city?: string): Promise<ZoningData | null> {
+  try {
+    console.log(`Fetching zoning data for coordinates: ${lat}, ${lng} in city: ${city || 'unknown'}`);
+    
+    // Default to Chicago if no city specified
+    const targetCity = (city || 'chicago').toLowerCase();
+    
+    // City-specific API calls
+    if (targetCity === 'chicago') {
+      // Try to get data from Chicago's dataset via Socrata Open Data API (SODA)
+      const response = await axios.get(
+        'https://data.cityofchicago.org/resource/nifi-zqag.json',
+        {
+          params: {
+            $where: `within_circle(geometry, ${lat}, ${lng}, 100)`, // 100 meters radius
+            $limit: 1
+          }
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        console.log(`Found Chicago zoning data: ${JSON.stringify(response.data[0])}`);
+        return {
+          zoning_classification: response.data[0].zoning_classification || 'Unknown',
+          description: response.data[0].zone_class_description || undefined
+        };
+      }
+    } else if (targetCity === 'denver') {
+      // Would query Denver's zoning API in production
+      console.log('Would query Denver Open Data Portal zoning API in production');
+      
+      // For prototype, use Denver mock zoning data
+      return getMockZoningDataForCity(lat, lng, 'denver');
+    } else if (targetCity === 'charlotte' || targetCity === 'raleigh' || targetCity === 'nashville') {
+      // Would query respective city's zoning API in production
+      console.log(`Would query ${targetCity.charAt(0).toUpperCase() + targetCity.slice(1)} Open Data Portal zoning API in production`);
+      
+      // For prototype, use city-specific mock zoning data
+      return getMockZoningDataForCity(lat, lng, targetCity);
     }
     
-    // If no data is returned, use mock data based on location
+    // If no data is returned or city not supported, use mock data based on location
     console.log('No zoning data found from API, using mock data');
-    return getMockZoningData(lat, lng);
+    return getMockZoningDataForCity(lat, lng, targetCity);
   } catch (error) {
     console.error('Error fetching zoning data:', error);
     console.log('Error fetching zoning data, using mock data');
+    return getMockZoningDataForCity(lat, lng, targetCity);
+  }
+}
+
+// Helper function to get mock zoning data based on coordinates and city
+function getMockZoningDataForCity(lat: number, lng: number, city?: string): ZoningData {
+  // Default to Chicago if city not specified or not supported
+  const targetCity = (city || 'chicago').toLowerCase();
+  
+  if (targetCity === 'chicago') {
     return getMockZoningData(lat, lng);
+  }
+  
+  // For other cities, determine zone type based on coordinates
+  // This is a simplification that approximates downtown usually being in center
+  const cityCoords = CITY_FALLBACK_COORDINATES[targetCity as keyof typeof CITY_FALLBACK_COORDINATES];
+  if (!cityCoords) {
+    return getMockZoningData(lat, lng); // Default to Chicago zoning if city not found
+  }
+  
+  // Calculate distance from city center
+  const distance = Math.sqrt(
+    Math.pow(lat - cityCoords.lat, 2) + 
+    Math.pow(lng - cityCoords.lng, 2)
+  );
+  
+  // Get zoning data for the target city
+  const cityZoningData = CITY_ZONING_DATA[targetCity as keyof typeof CITY_ZONING_DATA];
+  
+  if (!cityZoningData) {
+    return getMockZoningData(lat, lng); // Default to Chicago zoning if city data not found
+  }
+  
+  // Determine zone type based on distance from center and angle
+  if (distance < 0.01) {
+    return cityZoningData.downtown;
+  } else if (distance < 0.03) {
+    return cityZoningData.commercial;
+  } else if (distance < 0.05) {
+    return cityZoningData.residential_high;
+  } else if (distance < 0.08) {
+    return cityZoningData.residential_low;
+  } else {
+    return cityZoningData.industrial;
   }
 }
 
@@ -161,13 +278,23 @@ function getMockZoningData(lat: number, lng: number): ZoningData {
 }
 
 // Mock parcel data for when external API fails
-function generateMockParcelData(lat: number, lng: number): ParcelData {
+function generateMockParcelData(lat: number, lng: number, city?: string): ParcelData {
   // Create somewhat realistic PIN based on coordinates
   const latPart = Math.floor(lat * 100) % 100;
   const lngPart = Math.floor(Math.abs(lng) * 100) % 100;
   const random = Math.floor(Math.random() * 9000) + 1000;
   
-  const pin = `17${latPart}${lngPart}${random}0000`;
+  // Adjust PIN format based on city
+  let pin = `17${latPart}${lngPart}${random}0000`; // Chicago default
+  
+  // Cities with different PIN formats
+  if (city?.toLowerCase() === 'denver') {
+    // Denver uses 10-digit PINs with different format
+    pin = `0${latPart}${lngPart}${random}000`;
+  } else if (city?.toLowerCase() === 'charlotte' || city?.toLowerCase() === 'raleigh') {
+    // NC cities use different format
+    pin = `${latPart}${lngPart}${random}`;
+  }
   
   // Determine property class based on mock zoning
   const zoningData = getMockZoningData(lat, lng);
@@ -190,47 +317,88 @@ function generateMockParcelData(lat: number, lng: number): ParcelData {
   // Calculate mock square footage
   const sqFt = Math.floor((Math.random() * 5000) + 1000);
   
-  return {
+  // Base parcel data
+  const parcelData: ParcelData = {
     pin,
     property_class: propertyClass,
-    township_name: 'CHICAGO',
     square_footage: sqFt
   };
+  
+  // Add township name only for cities that use this concept
+  // Chicago and some Illinois municipalities use townships
+  if (!city || city.toLowerCase() === 'chicago') {
+    parcelData.township_name = 'CHICAGO';
+  } else if (city.toLowerCase() === 'denver') {
+    // Denver doesn't use townships, but has assessor districts
+    // Omit township_name completely
+  } else if (city.toLowerCase() === 'nashville') {
+    parcelData.township_name = 'DAVIDSON COUNTY';
+  } else if (city.toLowerCase() === 'charlotte' || city.toLowerCase() === 'raleigh') {
+    // NC cities use counties instead of townships
+    parcelData.township_name = city.toLowerCase() === 'charlotte' ? 'MECKLENBURG COUNTY' : 'WAKE COUNTY';
+  }
+  
+  return parcelData;
 }
 
-// Function to fetch parcel data from Cook County dataset
-async function fetchParcelData(lat: number, lng: number): Promise<ParcelData | null> {
+// Function to fetch parcel data from various city datasets
+async function fetchParcelData(lat: number, lng: number, city?: string): Promise<ParcelData | null> {
   try {
-    console.log(`Fetching parcel data for coordinates: ${lat}, ${lng}`);
+    console.log(`Fetching parcel data for coordinates: ${lat}, ${lng} in city: ${city || 'unknown'}`);
     
-    // Try to query Cook County's parcel dataset
-    const response = await axios.get(
-      'https://datacatalog.cookcountyil.gov/resource/nj4t-kc8j.json',
-      {
-        params: {
-          $where: `within_circle(location, ${lat}, ${lng}, 100)`, // 100 meters radius
-          $limit: 1
+    // Default to Chicago if no city specified
+    const targetCity = (city || 'chicago').toLowerCase();
+    
+    // City-specific data sources
+    if (targetCity === 'chicago') {
+      // Try to query Cook County's parcel dataset
+      const response = await axios.get(
+        'https://datacatalog.cookcountyil.gov/resource/nj4t-kc8j.json',
+        {
+          params: {
+            $where: `within_circle(location, ${lat}, ${lng}, 100)`, // 100 meters radius
+            $limit: 1
+          }
         }
-      }
-    );
+      );
 
-    if (response.data && response.data.length > 0) {
-      console.log(`Found parcel data: ${JSON.stringify(response.data[0])}`);
-      return {
-        pin: response.data[0].pin14 || 'Unknown',
-        property_class: response.data[0].class || 'Unknown',
-        township_name: response.data[0].township_name || 'CHICAGO',
-        square_footage: response.data[0].sqft ? Number(response.data[0].sqft) : undefined
-      };
+      if (response.data && response.data.length > 0) {
+        console.log(`Found Chicago parcel data: ${JSON.stringify(response.data[0])}`);
+        return {
+          pin: response.data[0].pin14 || 'Unknown',
+          property_class: response.data[0].class || 'Unknown',
+          township_name: response.data[0].township_name || 'CHICAGO',
+          square_footage: response.data[0].sqft ? Number(response.data[0].sqft) : undefined
+        };
+      }
+    } else if (targetCity === 'denver') {
+      // Denver Open Data Portal has different endpoints and data structure
+      // This is a placeholder for real Denver API integration
+      console.log('Would query Denver Open Data Portal in production');
+      
+      // For prototype, return mock data with Denver-specific structure
+      return generateMockParcelData(lat, lng, 'denver');
+    } else if (targetCity === 'charlotte' || targetCity === 'raleigh') {
+      // NC cities have their own open data portals
+      console.log(`Would query ${targetCity.charAt(0).toUpperCase() + targetCity.slice(1)} Open Data Portal in production`);
+      
+      // For prototype, return mock data with NC-specific structure
+      return generateMockParcelData(lat, lng, targetCity);
+    } else if (targetCity === 'nashville') {
+      // Nashville has its own data portal
+      console.log('Would query Nashville Open Data Portal in production');
+      
+      // For prototype, return mock data with Nashville-specific structure
+      return generateMockParcelData(lat, lng, 'nashville');
     }
     
-    // If no data is returned, use mock data
-    console.log('No parcel data found from API, using mock data');
-    return generateMockParcelData(lat, lng);
+    // If no data is returned or city not supported, use mock data
+    console.log('No parcel data found from API or city not supported, using mock data');
+    return generateMockParcelData(lat, lng, city);
   } catch (error) {
     console.error('Error fetching parcel data:', error);
     console.log('Error fetching parcel data, using mock data');
-    return generateMockParcelData(lat, lng);
+    return generateMockParcelData(lat, lng, city);
   }
 }
 
@@ -246,9 +414,10 @@ export async function GET(request: NextRequest) {
     return new NextResponse(null, { status: 204, headers });
   }
   
-  // Extract address from query parameters
+  // Extract address and city from query parameters
   const searchParams = request.nextUrl.searchParams;
   const address = searchParams.get('address');
+  const city = searchParams.get('city') || 'chicago'; // Default to Chicago if not specified
 
   if (!address) {
     return NextResponse.json(
@@ -258,24 +427,43 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log(`Processing zoning request for address: ${address}`);
+    console.log(`Processing zoning request for address: ${address} in city: ${city}`);
     
-    // Step 1: Geocode the address
-    const coordinates = await geocodeAddress(address);
+    // Step 1: Geocode the address with city context
+    const coordinates = await geocodeAddress(address, city);
     console.log(`Geocoding result: ${JSON.stringify(coordinates)}`);
     
-    // Step 2 & 3: Fetch zoning and parcel data in parallel
+    // Step 2 & 3: Fetch zoning and parcel data in parallel with city context
     const [zoningData, parcelData] = await Promise.all([
-      fetchZoningData(coordinates.lat, coordinates.lng),
-      fetchParcelData(coordinates.lat, coordinates.lng)
+      fetchZoningData(coordinates.lat, coordinates.lng, city),
+      fetchParcelData(coordinates.lat, coordinates.lng, city)
     ]);
+
+    // Determine appropriate database name based on city for error messages
+    let zoningDatabase = 'Chicago zoning database';
+    let parcelDatabase = 'Cook County parcel database';
+    
+    if (city?.toLowerCase() === 'denver') {
+      zoningDatabase = 'Denver zoning database';
+      parcelDatabase = 'Denver GIS database';
+    } else if (city?.toLowerCase() === 'charlotte') {
+      zoningDatabase = 'Charlotte zoning database';
+      parcelDatabase = 'Mecklenburg County parcel database';
+    } else if (city?.toLowerCase() === 'raleigh') {
+      zoningDatabase = 'Raleigh zoning database';
+      parcelDatabase = 'Wake County parcel database';
+    } else if (city?.toLowerCase() === 'nashville') {
+      zoningDatabase = 'Nashville zoning database';
+      parcelDatabase = 'Davidson County parcel database';
+    }
 
     // Step 4: Prepare the response
     const response = {
       coordinates,
-      zoning: zoningData || { zoning_classification: 'Not found in Chicago zoning database' },
-      parcel: parcelData || { pin: 'Not found in Cook County parcel database' },
-      address_queried: address
+      zoning: zoningData || { zoning_classification: `Not found in ${zoningDatabase}` },
+      parcel: parcelData || { pin: `Not found in ${parcelDatabase}` },
+      address_queried: address,
+      city: city
     };
 
     console.log(`Sending response: ${JSON.stringify(response)}`);
