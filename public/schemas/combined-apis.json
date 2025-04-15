@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Capital Match AI Platform APIs",
-    "description": "Combined APIs for zoning lookup, investor matching, and market comparison, leveraging municipal open data sources",
+    "description": "Combined APIs for zoning lookup, investor matching, market comparison, and entitlement tracking, leveraging municipal open data sources",
     "version": "1.0.0",
     "x-data-sources": {
       "city-portals": [
@@ -815,6 +815,228 @@
         }
       }
     },
+    "/entitlement-tracking": {
+      "get": {
+        "summary": "Track entitlement and permit status for a given property",
+        "operationId": "trackEntitlements",
+        "tags": [
+          "Entitlements"
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "description": "The property address to look up entitlements for",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1700 Lincoln St, Denver, CO"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "description": "The city to look up entitlement information",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Denver",
+                "Chicago",
+                "Charlotte",
+                "Raleigh",
+                "Nashville",
+                "New York",
+                "Los Angeles",
+                "Miami",
+                "Dallas"
+              ],
+              "example": "Denver"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with entitlement tracking data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string",
+                      "example": "denver"
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": "1700 Lincoln St, Denver, CO"
+                    },
+                    "permits": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "Rezoning"
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "Approved"
+                          },
+                          "reference_number": {
+                            "type": "string",
+                            "example": "Z-2023-10456"
+                          },
+                          "filing_date": {
+                            "type": "string",
+                            "example": "2023-05-15"
+                          },
+                          "last_update": {
+                            "type": "string",
+                            "example": "2023-09-22"
+                          },
+                          "description": {
+                            "type": "string",
+                            "example": "Rezoning from C-MX-5 to C-MX-8"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing required parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Both city and address are required."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
+    "/supported-cities": {
+      "get": {
+        "summary": "Get list of supported cities",
+        "operationId": "getSupportedCities",
+        "tags": [
+          "Cities"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned list of supported cities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "supportedCities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "denver",
+                        "chicago",
+                        "charlotte",
+                        "raleigh",
+                        "nashville",
+                        "new york",
+                        "los angeles",
+                        "miami",
+                        "dallas"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
+    "/entitlement-types": {
+      "get": {
+        "summary": "Get entitlement types for a specific city",
+        "operationId": "getEntitlementTypes",
+        "tags": [
+          "Entitlements"
+        ],
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "description": "The city to get entitlement types for",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Chicago"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned entitlement types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string",
+                      "example": "chicago"
+                    },
+                    "entitlementTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Building Permit",
+                        "Zoning Change",
+                        "Planned Development",
+                        "Landmark Designation"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing city parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "City parameter is required."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
     "/market-comparison": {
       "get": {
         "summary": "Compare real estate metrics against market averages",
