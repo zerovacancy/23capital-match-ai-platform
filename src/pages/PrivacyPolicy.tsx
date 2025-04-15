@@ -1,6 +1,6 @@
 import React from 'react';
 import { Separator } from "@/components/ui/separator";
-import { Footer } from '@/components/Footer';
+import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 
 const PrivacyPolicy = () => {
