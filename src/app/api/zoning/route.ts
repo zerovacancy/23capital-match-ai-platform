@@ -843,8 +843,9 @@ export async function GET(request: NextRequest) {
       fetchParcelData(lat, lng, city)
     ]);
     
-    // If both zoning and parcel data are null, return a 404 error
-    if (zoningData === null && parcelData === null) {
+    // If either zoning or parcel data are null, return a 404 error
+    // This is a stricter validation that prevents any mock data fallbacks
+    if (zoningData === null || parcelData === null) {
       return NextResponse.json({
         error: `No valid parcel or zoning data could be retrieved for this address in ${city}. Please check the address or try another.`,
         coordinates: { lat, lng },
