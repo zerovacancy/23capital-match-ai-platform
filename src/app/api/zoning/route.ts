@@ -307,141 +307,409 @@ async function fetchZoningData(lat: number, lng: number, city?: string): Promise
     
     // City-specific API calls using Socrata Open Data API (SODA)
     if (targetCity === 'chicago') {
-      // Chicago zoning data
-      const response = await axios.get(
-        'https://data.cityofchicago.org/resource/nifi-zqag.json',
-        {
-          params: {
-            $where: `within_circle(geometry, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
-          }
-        }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Chicago zoning data: ${JSON.stringify(response.data[0])}`);
-        return {
-          zoning_classification: response.data[0].zoning_classification || 'Unknown',
-          description: response.data[0].zone_class_description || undefined
-        };
-      }
-    } else if (targetCity === 'denver') {
-      console.log(`Fetching Denver zoning data for: ${lat}, ${lng}`);
+      console.log(`Fetching Chicago zoning data for: ${lat}, ${lng}`);
       try {
-        // Try first Denver zoning API endpoint
+        // PRIMARY: Chicago's Socrata Open Data API (SODA)
         const response = await axios.get(
-          'https://data.denvergov.org/resource/9zfh-sxx4.json',
+          'https://data.cityofchicago.org/resource/nifi-zqag.json',
           {
             params: {
-              $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+              $where: `within_circle(geometry, ${lat}, ${lng}, 100)`, // 100 meters radius
               $limit: 1
             }
           }
         );
 
         if (response.data && response.data.length > 0) {
-          console.log(`Found Denver zoning data: ${JSON.stringify(response.data[0])}`);
+          console.log(`Found Chicago zoning data from primary API: ${JSON.stringify(response.data[0])}`);
           return {
-            zoning_classification: response.data[0].zone_district || 'Unknown',
-            description: response.data[0].description || undefined
+            zoning_classification: response.data[0].zoning_classification || 'Unknown',
+            description: response.data[0].zone_class_description || undefined
           };
         } else {
-          console.log('No results from primary Denver zoning API, trying backup endpoint');
+          console.log('No results from primary Chicago zoning API, trying backup endpoint');
           
-          // Try alternative Denver zoning endpoint
+          // BACKUP: Chicago ArcGIS zoning layer
           try {
-            const backupResponse = await axios.get(
-              'https://services1.arcgis.com/jN1m8PnLS9ZcTQW9/arcgis/rest/services/ZoningBase_WM/FeatureServer/0/query',
+            const arcgisResponse = await axios.get(
+              'https://mapserver.chicago.gov/arcgis/rest/services/ExternalApps/ZoningMapService/MapServer/0/query',
               {
                 params: {
+                  where: '1=1',
+                  outFields: 'ZONE_CLASS,ZONE_TYPE,ZONE_DESCR',
                   geometry: `${lng},${lat}`,
                   geometryType: 'esriGeometryPoint',
                   inSR: 4326,
-                  outFields: '*',
+                  spatialRel: 'esriSpatialRelIntersects',
                   returnGeometry: false,
-                  outSR: 4326,
                   f: 'json'
                 }
               }
             );
             
-            if (backupResponse.data && 
-                backupResponse.data.features && 
-                backupResponse.data.features.length > 0) {
-              const feature = backupResponse.data.features[0].attributes;
-              console.log(`Found Denver zoning from backup API: ${JSON.stringify(feature)}`);
+            if (arcgisResponse.data && 
+                arcgisResponse.data.features && 
+                arcgisResponse.data.features.length > 0) {
+              const feature = arcgisResponse.data.features[0].attributes;
+              console.log(`Found Chicago zoning from ArcGIS: ${JSON.stringify(feature)}`);
               return {
-                zoning_classification: feature.ZONE_CLASS || feature.ZONING || 'Unknown',
-                description: feature.ZONING_T || feature.ZONE_DESC || undefined
+                zoning_classification: feature.ZONE_CLASS || 'Unknown',
+                description: feature.ZONE_DESCR || feature.ZONE_TYPE || undefined
               };
             }
           } catch (backupError) {
-            console.error('Error with backup Denver API:', backupError.message);
+            console.error('Error with Chicago ArcGIS API:', backupError.message);
           }
         }
       } catch (e) {
-        console.error(`Error fetching from Denver primary API: ${e.message}`);
+        console.error(`Error fetching from Chicago zoning API: ${e.message}`);
       }
       
-      console.log('All Denver API endpoints failed, returning null');
+      console.log('All Chicago zoning API endpoints failed, returning null');
+      return null;
+    } else if (targetCity === 'denver') {
+      console.log(`Fetching Denver zoning data for: ${lat}, ${lng}`);
+      try {
+        // DIRECT CONNECTION TO DENVER'S ARCGIS ZONING API
+        // This is the OFFICIAL Denver zoning API using their ArcGIS REST services
+        const response = await axios.get(
+          'https://services3.arcgis.com/KjLm5iMQOAYyOJs4/arcgis/rest/services/PLAN_ZONING_DISTRICTS/FeatureServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'ZONE_DISTRICT,OVERLAY_DIST,NAME,DESCRIPTION',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Denver zoning from Denver ArcGIS: ${JSON.stringify(feature)}`);
+          return {
+            zoning_classification: feature.ZONE_DISTRICT || 'Unknown',
+            description: feature.DESCRIPTION || feature.NAME || undefined,
+            overlay_district: feature.OVERLAY_DIST || undefined
+          };
+        } else {
+          console.log('No results from primary Denver ArcGIS, trying backup endpoint');
+          
+          // Backup: Try Denver Open Data Portal
+          try {
+            const socResponse = await axios.get(
+              'https://opendata.arcgis.com/datasets/955e7a0f8bbc4f2b9610f5e3c4632db2_0.geojson',
+              {
+                params: {
+                  where: '1=1',
+                  outFields: '*',
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  spatialRel: 'esriSpatialRelIntersects',
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (socResponse.data && 
+                socResponse.data.features && 
+                socResponse.data.features.length > 0) {
+              const feature = socResponse.data.features[0].properties;
+              console.log(`Found Denver zoning from Open Data: ${JSON.stringify(feature)}`);
+              return {
+                zoning_classification: feature.ZONE_DISTRICT || feature.zoning_district || 'Unknown',
+                description: feature.DESCRIPTION || feature.description || undefined
+              };
+            }
+          } catch (backupError) {
+            console.error('Error with Denver OpenData API:', backupError.message);
+          }
+          
+          // Last resort fallback - Denver's legacy Socrata API
+          try {
+            const legacyResponse = await axios.get(
+              'https://data.denvergov.org/resource/9zfh-sxx4.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`,
+                  $limit: 1
+                }
+              }
+            );
+            
+            if (legacyResponse.data && legacyResponse.data.length > 0) {
+              console.log(`Found Denver zoning from legacy API: ${JSON.stringify(legacyResponse.data[0])}`);
+              return {
+                zoning_classification: legacyResponse.data[0].zone_district || 'Unknown',
+                description: legacyResponse.data[0].description || undefined
+              };
+            }
+          } catch (legacyError) {
+            console.error('Error with Denver legacy API:', legacyError.message);
+          }
+        }
+      } catch (e) {
+        console.error(`Error fetching from Denver zoning APIs: ${e.message}`);
+      }
+      
+      console.log('All Denver zoning API endpoints failed, returning null');
       return null;
     } else if (targetCity === 'charlotte') {
-      // Charlotte zoning data
-      const response = await axios.get(
-        'https://data.charlottenc.gov/resource/dqf5-yhfm.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Charlotte zoning data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Charlotte's ArcGIS REST API for zoning
+        const response = await axios.get(
+          'https://maps.mecklenburgcountync.gov/api/services/lni/CityZoning/MapServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'ZONING,ZONING_DESCRIPTION',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Charlotte zoning from ArcGIS: ${JSON.stringify(feature)}`);
+          return {
+            zoning_classification: feature.ZONING || 'Unknown',
+            description: feature.ZONING_DESCRIPTION || undefined
+          };
+        } else {
+          console.log('No results from Charlotte ArcGIS, trying Socrata API');
+          
+          // BACKUP: Charlotte's Socrata Open Data API
+          try {
+            const socResponse = await axios.get(
+              'https://data.charlottenc.gov/resource/dqf5-yhfm.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+                  $limit: 1
+                }
+              }
+            );
+
+            if (socResponse.data && socResponse.data.length > 0) {
+              console.log(`Found Charlotte zoning from Socrata: ${JSON.stringify(socResponse.data[0])}`);
+              return {
+                zoning_classification: socResponse.data[0].zoning_type || 'Unknown',
+                description: socResponse.data[0].zoning_description || undefined
+              };
+            }
+          } catch (socError) {
+            console.error('Error with Charlotte Socrata API:', socError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Charlotte zoning data: ${JSON.stringify(response.data[0])}`);
-        return {
-          zoning_classification: response.data[0].zoning_type || 'Unknown',
-          description: response.data[0].zoning_description || undefined
-        };
+      } catch (e) {
+        console.error(`Error fetching from Charlotte zoning API: ${e.message}`);
       }
+      
+      console.log('All Charlotte zoning API endpoints failed, returning null');
+      return null;
     } else if (targetCity === 'raleigh') {
-      // Raleigh zoning data
-      const response = await axios.get(
-        'https://data.raleighnc.gov/resource/v8b7-rwkf.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Raleigh zoning data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Raleigh's ArcGIS REST API for zoning
+        const response = await axios.get(
+          'https://maps.raleighnc.gov/arcgis/rest/services/Planning/Zoning/MapServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'ZONE_TYPE,SHORT_NAME,ZONE_STATUS',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint', 
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Raleigh zoning from ArcGIS: ${JSON.stringify(feature)}`);
+          return {
+            zoning_classification: feature.SHORT_NAME || feature.ZONE_TYPE || 'Unknown',
+            description: feature.ZONE_TYPE || undefined,
+            status: feature.ZONE_STATUS || undefined
+          };
+        } else {
+          console.log('No results from Raleigh ArcGIS, trying Socrata API');
+          
+          // BACKUP: Raleigh's Socrata Open Data API
+          try {
+            const socResponse = await axios.get(
+              'https://data.raleighnc.gov/resource/v8b7-rwkf.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+                  $limit: 1
+                }
+              }
+            );
+
+            if (socResponse.data && socResponse.data.length > 0) {
+              console.log(`Found Raleigh zoning from Socrata: ${JSON.stringify(socResponse.data[0])}`);
+              return {
+                zoning_classification: socResponse.data[0].zone_code || 'Unknown',
+                description: socResponse.data[0].zone_description || undefined
+              };
+            }
+          } catch (socError) {
+            console.error('Error with Raleigh Socrata API:', socError.message);
+          }
+          
+          // BACKUP 2: Wake County GIS for Raleigh
+          try {
+            const wakeResponse = await axios.get(
+              'https://maps.wakegov.com/arcgis/rest/services/Property/Cadastral/MapServer/6/query',
+              {
+                params: {
+                  where: '1=1',
+                  outFields: 'ZONING,ZONE_CODE,JURISDICTION',
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  spatialRel: 'esriSpatialRelIntersects',
+                  returnGeometry: false,
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (wakeResponse.data && 
+                wakeResponse.data.features && 
+                wakeResponse.data.features.length > 0) {
+              const feature = wakeResponse.data.features[0].attributes;
+              console.log(`Found Raleigh zoning from Wake County: ${JSON.stringify(feature)}`);
+              return {
+                zoning_classification: feature.ZONE_CODE || feature.ZONING || 'Unknown',
+                description: feature.ZONING || undefined,
+                jurisdiction: feature.JURISDICTION || 'Raleigh'
+              };
+            }
+          } catch (wakeError) {
+            console.error('Error with Wake County API:', wakeError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Raleigh zoning data: ${JSON.stringify(response.data[0])}`);
-        return {
-          zoning_classification: response.data[0].zone_code || 'Unknown',
-          description: response.data[0].zone_description || undefined
-        };
+      } catch (e) {
+        console.error(`Error fetching from Raleigh zoning API: ${e.message}`);
       }
+      
+      console.log('All Raleigh zoning API endpoints failed, returning null');
+      return null;
     } else if (targetCity === 'nashville') {
-      // Nashville zoning data
-      const response = await axios.get(
-        'https://data.nashville.gov/resource/xakp-ess3.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Nashville zoning data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Nashville's ArcGIS REST API for zoning
+        const response = await axios.get(
+          'https://maps.nashville.gov/arcgis/rest/services/Planning/Zoning/MapServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'ZONE_CODE,ZONE_DESC,ZONE_TYPE',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Nashville zoning from ArcGIS: ${JSON.stringify(feature)}`);
+          return {
+            zoning_classification: feature.ZONE_CODE || 'Unknown',
+            description: feature.ZONE_DESC || feature.ZONE_TYPE || undefined
+          };
+        } else {
+          console.log('No results from Nashville ArcGIS, trying Metro Open Data Portal');
+          
+          // BACKUP: Nashville's Socrata Open Data API
+          try {
+            const socResponse = await axios.get(
+              'https://data.nashville.gov/resource/xakp-ess3.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+                  $limit: 1
+                }
+              }
+            );
+
+            if (socResponse.data && socResponse.data.length > 0) {
+              console.log(`Found Nashville zoning from Socrata: ${JSON.stringify(socResponse.data[0])}`);
+              return {
+                zoning_classification: socResponse.data[0].zone_code || 'Unknown',
+                description: socResponse.data[0].zone_desc || undefined
+              };
+            }
+          } catch (socError) {
+            console.error('Error with Nashville Socrata API:', socError.message);
+          }
+          
+          // BACKUP 2: Davidson County Property Assessor
+          try {
+            const assessorResponse = await axios.get(
+              'https://maps.nashville.gov/arcgis/rest/services/Assessor/Property_Assessor/MapServer/0/query',
+              {
+                params: {
+                  where: '1=1',
+                  outFields: 'ZONE,PROPERTY_DESCRIPTION,LANDUSE_CATEGORY',
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  spatialRel: 'esriSpatialRelIntersects',
+                  returnGeometry: false,
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (assessorResponse.data && 
+                assessorResponse.data.features && 
+                assessorResponse.data.features.length > 0) {
+              const feature = assessorResponse.data.features[0].attributes;
+              console.log(`Found Nashville zoning from Assessor: ${JSON.stringify(feature)}`);
+              return {
+                zoning_classification: feature.ZONE || 'Unknown',
+                description: feature.PROPERTY_DESCRIPTION || feature.LANDUSE_CATEGORY || undefined
+              };
+            }
+          } catch (assessorError) {
+            console.error('Error with Nashville Assessor API:', assessorError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Nashville zoning data: ${JSON.stringify(response.data[0])}`);
-        return {
-          zoning_classification: response.data[0].zone_code || 'Unknown',
-          description: response.data[0].zone_desc || undefined
-        };
+      } catch (e) {
+        console.error(`Error fetching from Nashville zoning API: ${e.message}`);
       }
+      
+      console.log('All Nashville zoning API endpoints failed, returning null');
+      return null;
     }
     
     // If no data is returned or city not supported, return null instead of using mock data
@@ -672,83 +940,188 @@ async function fetchParcelData(lat: number, lng: number, city?: string): Promise
     
     // City-specific data sources using Socrata Open Data API (SODA)
     if (targetCity === 'chicago') {
-      // Cook County's parcel dataset
-      const response = await axios.get(
-        'https://datacatalog.cookcountyil.gov/resource/nj4t-kc8j.json',
-        {
-          params: {
-            $where: `within_circle(location, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
-          }
-        }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Chicago parcel data: ${JSON.stringify(response.data[0])}`);
-        return {
-          pin: response.data[0].pin14 || 'Unknown',
-          property_class: response.data[0].class || 'Unknown',
-          township_name: response.data[0].township_name || 'CHICAGO',
-          square_footage: response.data[0].sqft ? Number(response.data[0].sqft) : undefined
-        };
-      }
-    } else if (targetCity === 'denver') {
-      console.log(`Fetching Denver parcel data for: ${lat}, ${lng}`);
+      console.log(`Fetching Chicago parcel data for: ${lat}, ${lng}`);
       try {
-        // Denver parcel data - primary endpoint
+        // PRIMARY: Cook County's parcel dataset via Socrata
         const response = await axios.get(
-          'https://data.denvergov.org/resource/3yhk-fdih.json',
+          'https://datacatalog.cookcountyil.gov/resource/nj4t-kc8j.json',
           {
             params: {
-              $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+              $where: `within_circle(location, ${lat}, ${lng}, 100)`, // 100 meters radius
               $limit: 1
             }
           }
         );
 
         if (response.data && response.data.length > 0) {
-          console.log(`Found Denver parcel data: ${JSON.stringify(response.data[0])}`);
+          console.log(`Found Chicago parcel data from Cook County: ${JSON.stringify(response.data[0])}`);
           return {
-            pin: response.data[0].schednum || 'Unknown',
-            property_class: response.data[0].landuse || 'Unknown',
-            township_name: 'DENVER COUNTY',
-            square_footage: response.data[0].land_area ? Number(response.data[0].land_area) : undefined
+            pin: response.data[0].pin14 || 'Unknown',
+            property_class: response.data[0].class || 'Unknown',
+            township_name: response.data[0].township_name || 'CHICAGO',
+            square_footage: response.data[0].sqft ? Number(response.data[0].sqft) : undefined
           };
         } else {
-          console.log('No results from primary Denver parcel API, trying backup endpoint');
+          console.log('No results from Cook County API, trying Chicago Assessor');
           
-          // Try alternative Denver parcels endpoint
+          // BACKUP: Chicago Assessor's API
           try {
-            const backupResponse = await axios.get(
-              'https://services1.arcgis.com/jN1m8PnLS9ZcTQW9/arcgis/rest/services/Parcels_Map/FeatureServer/0/query',
+            const assessorResponse = await axios.get(
+              'https://server1.cookcountyassessor.com/ArcGIS/rest/services/S4/MapServer/0/query',
               {
                 params: {
+                  where: '1=1',
+                  outFields: 'PIN,PROPERTY_CLASS,TOWNSHIP,SQFT',
                   geometry: `${lng},${lat}`,
                   geometryType: 'esriGeometryPoint',
                   inSR: 4326,
-                  outFields: '*',
+                  spatialRel: 'esriSpatialRelIntersects',
                   returnGeometry: false,
-                  outSR: 4326,
                   f: 'json'
                 }
               }
             );
             
-            if (backupResponse.data && 
-                backupResponse.data.features && 
-                backupResponse.data.features.length > 0) {
-              const feature = backupResponse.data.features[0].attributes;
-              console.log(`Found Denver parcel from backup API: ${JSON.stringify(feature)}`);
+            if (assessorResponse.data && 
+                assessorResponse.data.features && 
+                assessorResponse.data.features.length > 0) {
+              const feature = assessorResponse.data.features[0].attributes;
+              console.log(`Found Chicago parcel from Assessor: ${JSON.stringify(feature)}`);
               return {
-                pin: feature.SCHEDULE_NUMBER || feature.PARCEL_ID || 'Unknown',
-                property_class: feature.LAND_USE || feature.USE_DESC || 'Unknown',
-                township_name: 'DENVER COUNTY',
-                square_footage: feature.LAND_SQFT || feature.AREA_SF ? 
-                  Number(feature.LAND_SQFT || feature.AREA_SF) : undefined
+                pin: feature.PIN || 'Unknown',
+                property_class: feature.PROPERTY_CLASS || 'Unknown',
+                township_name: feature.TOWNSHIP || 'CHICAGO',
+                square_footage: feature.SQFT ? Number(feature.SQFT) : undefined
               };
             }
-          } catch (backupError) {
-            console.error('Error with backup Denver parcel API:', backupError.message);
+          } catch (assessorError) {
+            console.error('Error with Chicago Assessor API:', assessorError.message);
+          }
+          
+          // BACKUP 2: Chicago Data Portal Parcels
+          try {
+            const cdpResponse = await axios.get(
+              'https://data.cityofchicago.org/resource/aksk-kvfp.json',
+              {
+                params: {
+                  $where: `within_circle(centroid, ${lat}, ${lng}, 100)`,
+                  $limit: 1
+                }
+              }
+            );
+            
+            if (cdpResponse.data && cdpResponse.data.length > 0) {
+              console.log(`Found Chicago parcel from City Data Portal: ${JSON.stringify(cdpResponse.data[0])}`);
+              return {
+                pin: cdpResponse.data[0].pin || 'Unknown',
+                property_class: cdpResponse.data[0].zoning || 'Unknown',
+                township_name: 'CHICAGO',
+                square_footage: cdpResponse.data[0].shape_area ? Number(cdpResponse.data[0].shape_area) : undefined
+              };
+            }
+          } catch (cdpError) {
+            console.error('Error with Chicago Data Portal API:', cdpError.message);
+          }
+        }
+      } catch (e) {
+        console.error(`Error fetching from Chicago parcel API: ${e.message}`);
+      }
+      
+      console.log('All Chicago parcel API endpoints failed, returning null');
+      return null;
+    } else if (targetCity === 'denver') {
+      console.log(`Fetching Denver parcel data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Denver's OFFICIAL ArcGIS Parcel API endpoint
+        const response = await axios.get(
+          'https://services3.arcgis.com/KjLm5iMQOAYyOJs4/arcgis/rest/services/PARCELS/FeatureServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'SCHEDNUM,PARCELSQFT,PROPERTYADDRESS,STRUCTURESQFT,TAX_DISTRICT,PARCEL_TYPE,LANDUSE',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Denver parcel from Denver ArcGIS: ${JSON.stringify(feature)}`);
+          return {
+            pin: feature.SCHEDNUM || 'Unknown',
+            property_class: feature.LANDUSE || feature.PARCEL_TYPE || 'Unknown',
+            township_name: 'DENVER COUNTY',
+            square_footage: feature.PARCELSQFT ? Number(feature.PARCELSQFT) : undefined,
+            address: feature.PROPERTYADDRESS || undefined
+          };
+        } else {
+          console.log('No results from Denver ArcGIS parcels, trying Property Assessment API');
+          
+          // BACKUP 1: Denver's Property Assessment API
+          try {
+            const assessorResponse = await axios.get(
+              'https://services3.arcgis.com/KjLm5iMQOAYyOJs4/arcgis/rest/services/REAL_PROPERTY/FeatureServer/0/query',
+              {
+                params: {
+                  where: '1=1',
+                  outFields: 'SCHEDULE_NUMBER,TAX_DISTRICT,SHAPE_AREA,NEIGHBORHOOD_NAME,PROPERTY_CLASS',
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  spatialRel: 'esriSpatialRelIntersects',
+                  returnGeometry: false,
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (assessorResponse.data && 
+                assessorResponse.data.features && 
+                assessorResponse.data.features.length > 0) {
+              const feature = assessorResponse.data.features[0].attributes;
+              console.log(`Found Denver parcel from Assessor API: ${JSON.stringify(feature)}`);
+              return {
+                pin: feature.SCHEDULE_NUMBER || 'Unknown',
+                property_class: feature.PROPERTY_CLASS || 'Unknown',
+                township_name: feature.TAX_DISTRICT || 'DENVER COUNTY',
+                square_footage: feature.SHAPE_AREA ? Number(feature.SHAPE_AREA) : undefined,
+                neighborhood: feature.NEIGHBORHOOD_NAME || undefined
+              };
+            }
+          } catch (assessorError) {
+            console.error('Error with Denver Assessor API:', assessorError.message);
+          }
+          
+          // BACKUP 2: Legacy Socrata API
+          try {
+            const legacyResponse = await axios.get(
+              'https://data.denvergov.org/resource/3yhk-fdih.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`,
+                  $limit: 1
+                }
+              }
+            );
+            
+            if (legacyResponse.data && legacyResponse.data.length > 0) {
+              console.log(`Found Denver parcel from legacy API: ${JSON.stringify(legacyResponse.data[0])}`);
+              return {
+                pin: legacyResponse.data[0].schednum || 'Unknown',
+                property_class: legacyResponse.data[0].landuse || 'Unknown',
+                township_name: 'DENVER COUNTY',
+                square_footage: legacyResponse.data[0].land_area ? Number(legacyResponse.data[0].land_area) : undefined
+              };
+            }
+          } catch (legacyError) {
+            console.error('Error with Denver legacy parcel API:', legacyError.message);
           }
         }
       } catch (e) {
@@ -758,72 +1131,307 @@ async function fetchParcelData(lat: number, lng: number, city?: string): Promise
       console.log('All Denver parcel API endpoints failed, returning null');
       return null;
     } else if (targetCity === 'charlotte') {
-      // Mecklenburg County parcel data
-      const response = await axios.get(
-        'https://data.charlottenc.gov/resource/3ua2-8ms2.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Charlotte parcel data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Mecklenburg County GIS REST API
+        const response = await axios.get(
+          'https://maps.mecklenburgcountync.gov/api/services/lni/TaxParcel/MapServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'TAXPARCEL_ID,LAND_CLASS,ACREAGE,LANDUSE',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Charlotte parcel from Mecklenburg GIS: ${JSON.stringify(feature)}`);
+          return {
+            pin: feature.TAXPARCEL_ID || 'Unknown',
+            property_class: feature.LAND_CLASS || feature.LANDUSE || 'Unknown',
+            township_name: 'MECKLENBURG COUNTY',
+            square_footage: feature.ACREAGE ? Number(feature.ACREAGE) * 43560 : undefined // Convert acres to sq ft
+          };
+        } else {
+          console.log('No results from Mecklenburg County API, trying Charlotte Open Data');
+          
+          // BACKUP: Charlotte's Open Data Portal
+          try {
+            const openDataResponse = await axios.get(
+              'https://data.charlottenc.gov/resource/3ua2-8ms2.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+                  $limit: 1
+                }
+              }
+            );
+
+            if (openDataResponse.data && openDataResponse.data.length > 0) {
+              console.log(`Found Charlotte parcel from Open Data: ${JSON.stringify(openDataResponse.data[0])}`);
+              return {
+                pin: openDataResponse.data[0].parcel_id || 'Unknown',
+                property_class: openDataResponse.data[0].land_use || 'Unknown',
+                township_name: 'MECKLENBURG COUNTY',
+                square_footage: openDataResponse.data[0].land_area ? Number(openDataResponse.data[0].land_area) : undefined
+              };
+            }
+          } catch (openDataError) {
+            console.error('Error with Charlotte Open Data API:', openDataError.message);
+          }
+          
+          // BACKUP 2: Mecklenburg County Tax API
+          try {
+            const taxResponse = await axios.get(
+              'https://api.mecklenburgcountync.gov/rest/tax/property/location',
+              {
+                params: {
+                  latitude: lat,
+                  longitude: lng
+                },
+                headers: {
+                  'Accept': 'application/json'
+                }
+              }
+            );
+            
+            if (taxResponse.data && taxResponse.data.property) {
+              console.log(`Found Charlotte parcel from Tax API: ${JSON.stringify(taxResponse.data.property)}`);
+              return {
+                pin: taxResponse.data.property.parcelID || 'Unknown',
+                property_class: taxResponse.data.property.useDescription || 'Unknown',
+                township_name: 'MECKLENBURG COUNTY',
+                square_footage: taxResponse.data.property.landArea || undefined
+              };
+            }
+          } catch (taxError) {
+            console.error('Error with Mecklenburg Tax API:', taxError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Charlotte parcel data: ${JSON.stringify(response.data[0])}`);
-        return {
-          pin: response.data[0].parcel_id || 'Unknown',
-          property_class: response.data[0].land_use || 'Unknown',
-          township_name: 'MECKLENBURG COUNTY',
-          square_footage: response.data[0].land_area ? Number(response.data[0].land_area) : undefined
-        };
+      } catch (e) {
+        console.error(`Error fetching from Charlotte parcel API: ${e.message}`);
       }
+      
+      console.log('All Charlotte parcel API endpoints failed, returning null');
+      return null;
     } else if (targetCity === 'raleigh') {
-      // Wake County parcel data
-      const response = await axios.get(
-        'https://data.raleighnc.gov/resource/cy7a-m4ux.json',
-        {
-          params: {
-            $where: `within_circle(geolocation, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Raleigh parcel data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Wake County GIS REST API
+        const response = await axios.get(
+          'https://maps.wakegov.com/arcgis/rest/services/Property/Cadastral/MapServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'OBJECTID,PIN_NUM,OWNER,ADDR1,ACREAGE,LAND_VAL,LANDUSE_DESC',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Raleigh parcel from Wake GIS: ${JSON.stringify(feature)}`);
+          return {
+            pin: feature.PIN_NUM || 'Unknown',
+            property_class: feature.LANDUSE_DESC || 'Unknown',
+            township_name: 'WAKE COUNTY',
+            square_footage: feature.ACREAGE ? Number(feature.ACREAGE) * 43560 : undefined, // Convert acres to sq ft
+            address: feature.ADDR1 || undefined
+          };
+        } else {
+          console.log('No results from Wake County API, trying Raleigh Open Data');
+          
+          // BACKUP: Raleigh's Open Data Portal
+          try {
+            const openDataResponse = await axios.get(
+              'https://data.raleighnc.gov/resource/cy7a-m4ux.json',
+              {
+                params: {
+                  $where: `within_circle(geolocation, ${lat}, ${lng}, 100)`, // 100 meters radius
+                  $limit: 1
+                }
+              }
+            );
+
+            if (openDataResponse.data && openDataResponse.data.length > 0) {
+              console.log(`Found Raleigh parcel from Open Data: ${JSON.stringify(openDataResponse.data[0])}`);
+              return {
+                pin: openDataResponse.data[0].pin_num || 'Unknown',
+                property_class: openDataResponse.data[0].property_use || 'Unknown',
+                township_name: 'WAKE COUNTY',
+                square_footage: openDataResponse.data[0].acreage ? Number(openDataResponse.data[0].acreage) * 43560 : undefined
+              };
+            }
+          } catch (openDataError) {
+            console.error('Error with Raleigh Open Data API:', openDataError.message);
+          }
+          
+          // BACKUP 2: Wake County Real Estate API
+          try {
+            const realEstateResponse = await axios.get(
+              'https://services.wakegov.com/realestate/Account.asp',
+              {
+                params: {
+                  id: 'GISSearch',
+                  stype: 'addr',
+                  stval: `${lat},${lng}`,
+                  loctype: 'latlong',
+                  spg: 1,
+                  ref: 0
+                }
+              }
+            );
+            
+            // Wake County Real Estate returns HTML, parse for PIN and other data
+            if (realEstateResponse.data && typeof realEstateResponse.data === 'string') {
+              const pinMatch = realEstateResponse.data.match(/PIN:\s*(\d+)/);
+              const areaMatch = realEstateResponse.data.match(/Acres:\s*([\d\.]+)/);
+              
+              if (pinMatch && pinMatch[1]) {
+                console.log(`Found Raleigh parcel from Wake Real Estate Search (PIN: ${pinMatch[1]})`);
+                return {
+                  pin: pinMatch[1],
+                  property_class: 'Unknown',
+                  township_name: 'WAKE COUNTY',
+                  square_footage: areaMatch && areaMatch[1] ? Number(areaMatch[1]) * 43560 : undefined
+                };
+              }
+            }
+          } catch (realEstateError) {
+            console.error('Error with Wake County Real Estate API:', realEstateError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Raleigh parcel data: ${JSON.stringify(response.data[0])}`);
-        return {
-          pin: response.data[0].pin_num || 'Unknown',
-          property_class: response.data[0].property_use || 'Unknown',
-          township_name: 'WAKE COUNTY',
-          square_footage: response.data[0].acreage ? Number(response.data[0].acreage) * 43560 : undefined // Convert acres to sq ft
-        };
+      } catch (e) {
+        console.error(`Error fetching from Raleigh parcel API: ${e.message}`);
       }
+      
+      console.log('All Raleigh parcel API endpoints failed, returning null');
+      return null;
     } else if (targetCity === 'nashville') {
-      // Nashville parcel data
-      const response = await axios.get(
-        'https://data.nashville.gov/resource/j7nq-7ct5.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Nashville parcel data for: ${lat}, ${lng}`);
+      try {
+        // PRIMARY: Nashville's Property Assessor REST API
+        const response = await axios.get(
+          'https://maps.nashville.gov/arcgis/rest/services/Assessor/Property_Assessor/MapServer/0/query',
+          {
+            params: {
+              where: '1=1',
+              outFields: 'PARCELID,LAND_SQFT,LANDUSE,PROPERTYADDRESS,OLAND,LANDUSE_CATEGORY',
+              geometry: `${lng},${lat}`,
+              geometryType: 'esriGeometryPoint',
+              inSR: 4326,
+              spatialRel: 'esriSpatialRelIntersects',
+              returnGeometry: false,
+              f: 'json'
+            }
+          }
+        );
+
+        if (response.data && 
+            response.data.features && 
+            response.data.features.length > 0) {
+          const feature = response.data.features[0].attributes;
+          console.log(`Found Nashville parcel from Property Assessor: ${JSON.stringify(feature)}`);
+          return {
+            pin: feature.PARCELID || 'Unknown',
+            property_class: feature.LANDUSE || feature.LANDUSE_CATEGORY || 'Unknown',
+            township_name: 'DAVIDSON COUNTY',
+            square_footage: feature.LAND_SQFT ? Number(feature.LAND_SQFT) : undefined,
+            address: feature.PROPERTYADDRESS || undefined
+          };
+        } else {
+          console.log('No results from Nashville Assessor API, trying Open Data Portal');
+          
+          // BACKUP: Nashville's Open Data Portal
+          try {
+            const openDataResponse = await axios.get(
+              'https://data.nashville.gov/resource/j7nq-7ct5.json',
+              {
+                params: {
+                  $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+                  $limit: 1
+                }
+              }
+            );
+
+            if (openDataResponse.data && openDataResponse.data.length > 0) {
+              console.log(`Found Nashville parcel from Open Data: ${JSON.stringify(openDataResponse.data[0])}`);
+              return {
+                pin: openDataResponse.data[0].parcel_id || 'Unknown',
+                property_class: openDataResponse.data[0].land_use || 'Unknown',
+                township_name: 'DAVIDSON COUNTY',
+                square_footage: openDataResponse.data[0].acres ? Number(openDataResponse.data[0].acres) * 43560 : undefined
+              };
+            }
+          } catch (openDataError) {
+            console.error('Error with Nashville Open Data API:', openDataError.message);
+          }
+          
+          // BACKUP 2: Nashville Metro GIS Parcels
+          try {
+            const gisResponse = await axios.get(
+              'https://maps.nashville.gov/arcgis/rest/services/Metro/PROPERTY/MapServer/0/query',
+              {
+                params: {
+                  where: '1=1',
+                  outFields: 'PARCEL_ID,ACREAGE,GRANTEE',
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  spatialRel: 'esriSpatialRelIntersects',
+                  returnGeometry: false,
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (gisResponse.data && 
+                gisResponse.data.features && 
+                gisResponse.data.features.length > 0) {
+              const feature = gisResponse.data.features[0].attributes;
+              console.log(`Found Nashville parcel from Metro GIS: ${JSON.stringify(feature)}`);
+              return {
+                pin: feature.PARCEL_ID || 'Unknown',
+                property_class: 'Unknown', // Metro GIS doesn't provide property class
+                township_name: 'DAVIDSON COUNTY',
+                square_footage: feature.ACREAGE ? Number(feature.ACREAGE) * 43560 : undefined,
+                owner: feature.GRANTEE || undefined
+              };
+            }
+          } catch (gisError) {
+            console.error('Error with Nashville Metro GIS API:', gisError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Nashville parcel data: ${JSON.stringify(response.data[0])}`);
-        return {
-          pin: response.data[0].parcel_id || 'Unknown',
-          property_class: response.data[0].land_use || 'Unknown',
-          township_name: 'DAVIDSON COUNTY',
-          square_footage: response.data[0].acres ? Number(response.data[0].acres) * 43560 : undefined // Convert acres to sq ft
-        };
+      } catch (e) {
+        console.error(`Error fetching from Nashville parcel API: ${e.message}`);
       }
+      
+      console.log('All Nashville parcel API endpoints failed, returning null');
+      return null;
     }
     
-    // If no data is returned or city not supported, return null instead of using mock data
-    console.log('No parcel data found from API or city not supported, returning null');
+    // If we're dealing with an unsupported city
+    console.log(`City "${targetCity}" is not directly supported with real data APIs`);
+    
+    // For unsupported cities, return null - don't fall back to mock data
+    console.log('Unsupported city, returning null instead of using mock data');
     return null;
   } catch (error) {
     console.error('Error fetching parcel data:', error);
