@@ -536,6 +536,60 @@ function generateMockParcelData(lat: number, lng: number, city?: string): Parcel
   return parcelData;
 }
 
+// Function to validate coordinates for a given city
+function validateCoordinatesForCity(lat: number, lng: number, city: string): boolean {
+  // Basic bounding boxes for cities to catch obvious mismatches
+  const cityBounds = {
+    chicago: {
+      minLat: 41.6,
+      maxLat: 42.1,
+      minLng: -88.0,
+      maxLng: -87.4
+    },
+    denver: {
+      minLat: 39.5,
+      maxLat: 40.0,
+      minLng: -105.2,
+      maxLng: -104.7
+    },
+    charlotte: {
+      minLat: 35.0,
+      maxLat: 35.5,
+      minLng: -81.0,
+      maxLng: -80.6
+    },
+    raleigh: {
+      minLat: 35.6,
+      maxLat: 36.0,
+      minLng: -78.9,
+      maxLng: -78.4
+    },
+    nashville: {
+      minLat: 35.9,
+      maxLat: 36.4,
+      minLng: -87.1,
+      maxLng: -86.5
+    }
+  };
+  
+  const bounds = cityBounds[city.toLowerCase() as keyof typeof cityBounds];
+  
+  if (!bounds) {
+    console.warn(`No bounding box defined for city: ${city}`);
+    return false;
+  }
+  
+  const isInBounds = 
+    lat >= bounds.minLat && 
+    lat <= bounds.maxLat && 
+    lng >= bounds.minLng && 
+    lng <= bounds.maxLng;
+  
+  console.log(`Coordinate validation for ${city}: ${isInBounds} (${lat}, ${lng})`);
+  
+  return isInBounds;
+}
+
 // Function to fetch parcel data from various city datasets
 async function fetchParcelData(lat: number, lng: number, city?: string): Promise<ParcelData | null> {
   try {
@@ -742,6 +796,14 @@ export async function GET(request: NextRequest) {
           error: `Geocode mismatch: Address appears to be in ${resolvedCity}, not ${city}. Please confirm the city or try a more specific address.`
         }, { status: 400, headers });
       }
+    }
+    
+    // Additional coordinate validation to ensure we're in the right city
+    const coordsValid = validateCoordinatesForCity(lat, lng, city);
+    if (!coordsValid) {
+      return NextResponse.json({
+        error: `Coordinate validation failed: The coordinates (${lat}, ${lng}) do not appear to be in ${city}. Please check the address and city.`
+      }, { status: 400, headers });
     }
     
     // Step 3: Fetch zoning and parcel data in parallel with city context
