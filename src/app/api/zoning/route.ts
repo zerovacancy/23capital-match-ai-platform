@@ -403,13 +403,13 @@ async function fetchZoningData(lat: number, lng: number, city?: string): Promise
       }
     }
     
-    // If no data is returned or city not supported, use mock data based on location
-    console.log('No zoning data found from API, using mock data as fallback');
-    return getMockZoningDataForCity(lat, lng, targetCity);
+    // If no data is returned or city not supported, return null instead of using mock data
+    console.log('No zoning data found from API, returning null');
+    return null;
   } catch (error) {
     console.error('Error fetching zoning data:', error);
-    console.log('Error fetching zoning data, using mock data as fallback');
-    return getMockZoningDataForCity(lat, lng, targetCity);
+    console.log('Error fetching zoning data, returning null');
+    return null;
   }
 }
 
@@ -737,13 +737,13 @@ async function fetchParcelData(lat: number, lng: number, city?: string): Promise
       }
     }
     
-    // If no data is returned or city not supported, use mock data as fallback
-    console.log('No parcel data found from API or city not supported, using mock data as fallback');
-    return generateMockParcelData(lat, lng, city);
+    // If no data is returned or city not supported, return null instead of using mock data
+    console.log('No parcel data found from API or city not supported, returning null');
+    return null;
   } catch (error) {
     console.error('Error fetching parcel data:', error);
-    console.log('Error fetching parcel data, using mock data as fallback');
-    return generateMockParcelData(lat, lng, city);
+    console.log('Error fetching parcel data, returning null');
+    return null;
   }
 }
 
@@ -842,6 +842,15 @@ export async function GET(request: NextRequest) {
       fetchZoningData(lat, lng, city),
       fetchParcelData(lat, lng, city)
     ]);
+    
+    // If both zoning and parcel data are null, return a 404 error
+    if (zoningData === null && parcelData === null) {
+      return NextResponse.json({
+        error: `No valid parcel or zoning data could be retrieved for this address in ${city}. Please check the address or try another.`,
+        coordinates: { lat, lng },
+        city
+      }, { status: 404, headers });
+    }
 
     // Determine appropriate database name based on city for error messages
     let zoningDatabase = 'Chicago zoning database';
