@@ -12,7 +12,12 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/api/openapi/zoning", "destination": "/api/openapi/zoning" },
+    { "source": "/api/openapi/investor-match", "destination": "/api/openapi/investor-match" },
+    { "source": "/api/openapi/market-comparison", "destination": "/api/openapi/market-comparison" },
+    { "source": "/api/zoning", "destination": "/api/zoning" },
+    { "source": "/api/investor-match", "destination": "/api/investor-match" },
+    { "source": "/api/market-comparison", "destination": "/api/market-comparison" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
