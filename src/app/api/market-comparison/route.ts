@@ -152,6 +152,36 @@ const marketData = {
       "averagePricePerSqFt": 105,
       "yearOverYearValueChange": 9.8
     }
+  },
+  "Nashville": {
+    "multifamily": {
+      "averageCapRate": 5.3,
+      "averageRentPerSqFt": 1.92,
+      "vacancyRate": 4.8,
+      "averagePricePerUnit": 215000,
+      "yearOverYearValueChange": 5.7
+    },
+    "office": {
+      "averageCapRate": 6.5,
+      "averageRentPerSqFt": 29.5,
+      "vacancyRate": 15.2,
+      "averagePricePerSqFt": 295,
+      "yearOverYearValueChange": -0.8
+    },
+    "retail": {
+      "averageCapRate": 7.0,
+      "averageRentPerSqFt": 25.5,
+      "vacancyRate": 6.8,
+      "averagePricePerSqFt": 265,
+      "yearOverYearValueChange": 1.2
+    },
+    "industrial": {
+      "averageCapRate": 4.9,
+      "averageRentPerSqFt": 7.35,
+      "vacancyRate": 3.5,
+      "averagePricePerSqFt": 98,
+      "yearOverYearValueChange": 8.5
+    }
   }
 };
 

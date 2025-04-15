@@ -344,7 +344,7 @@
             {
               "name": "city",
               "in": "query",
-              "description": "The city to compare against (e.g., Chicago, New York, Los Angeles, Miami, Dallas)",
+              "description": "The city to compare against (e.g., Chicago, New York, Los Angeles, Miami, Dallas, Nashville)",
               "required": true,
               "schema": {
                 "type": "string",
