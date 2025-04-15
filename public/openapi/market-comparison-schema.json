@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "Real Estate Market Comparison API",
     "description": "Compare real estate deal metrics against local market averages.",

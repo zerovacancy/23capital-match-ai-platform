@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: Chicago Parcel and Zoning Lookup API
   description: An API to retrieve parcel and zoning information for properties in Chicago.
