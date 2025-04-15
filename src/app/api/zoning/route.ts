@@ -326,24 +326,65 @@ async function fetchZoningData(lat: number, lng: number, city?: string): Promise
         };
       }
     } else if (targetCity === 'denver') {
-      // Denver zoning data
-      const response = await axios.get(
-        'https://data.denvergov.org/resource/9zfh-sxx4.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Denver zoning data for: ${lat}, ${lng}`);
+      try {
+        // Try first Denver zoning API endpoint
+        const response = await axios.get(
+          'https://data.denvergov.org/resource/9zfh-sxx4.json',
+          {
+            params: {
+              $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+              $limit: 1
+            }
+          }
+        );
+
+        if (response.data && response.data.length > 0) {
+          console.log(`Found Denver zoning data: ${JSON.stringify(response.data[0])}`);
+          return {
+            zoning_classification: response.data[0].zone_district || 'Unknown',
+            description: response.data[0].description || undefined
+          };
+        } else {
+          console.log('No results from primary Denver zoning API, trying backup endpoint');
+          
+          // Try alternative Denver zoning endpoint
+          try {
+            const backupResponse = await axios.get(
+              'https://services1.arcgis.com/jN1m8PnLS9ZcTQW9/arcgis/rest/services/ZoningBase_WM/FeatureServer/0/query',
+              {
+                params: {
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  outFields: '*',
+                  returnGeometry: false,
+                  outSR: 4326,
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (backupResponse.data && 
+                backupResponse.data.features && 
+                backupResponse.data.features.length > 0) {
+              const feature = backupResponse.data.features[0].attributes;
+              console.log(`Found Denver zoning from backup API: ${JSON.stringify(feature)}`);
+              return {
+                zoning_classification: feature.ZONE_CLASS || feature.ZONING || 'Unknown',
+                description: feature.ZONING_T || feature.ZONE_DESC || undefined
+              };
+            }
+          } catch (backupError) {
+            console.error('Error with backup Denver API:', backupError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Denver zoning data: ${JSON.stringify(response.data[0])}`);
-        return {
-          zoning_classification: response.data[0].zone_district || 'Unknown',
-          description: response.data[0].description || undefined
-        };
+      } catch (e) {
+        console.error(`Error fetching from Denver primary API: ${e.message}`);
       }
+      
+      console.log('All Denver API endpoints failed, returning null');
+      return null;
     } else if (targetCity === 'charlotte') {
       // Charlotte zoning data
       const response = await axios.get(
@@ -652,26 +693,70 @@ async function fetchParcelData(lat: number, lng: number, city?: string): Promise
         };
       }
     } else if (targetCity === 'denver') {
-      // Denver parcel data
-      const response = await axios.get(
-        'https://data.denvergov.org/resource/3yhk-fdih.json',
-        {
-          params: {
-            $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
-            $limit: 1
+      console.log(`Fetching Denver parcel data for: ${lat}, ${lng}`);
+      try {
+        // Denver parcel data - primary endpoint
+        const response = await axios.get(
+          'https://data.denvergov.org/resource/3yhk-fdih.json',
+          {
+            params: {
+              $where: `within_circle(shape, ${lat}, ${lng}, 100)`, // 100 meters radius
+              $limit: 1
+            }
+          }
+        );
+
+        if (response.data && response.data.length > 0) {
+          console.log(`Found Denver parcel data: ${JSON.stringify(response.data[0])}`);
+          return {
+            pin: response.data[0].schednum || 'Unknown',
+            property_class: response.data[0].landuse || 'Unknown',
+            township_name: 'DENVER COUNTY',
+            square_footage: response.data[0].land_area ? Number(response.data[0].land_area) : undefined
+          };
+        } else {
+          console.log('No results from primary Denver parcel API, trying backup endpoint');
+          
+          // Try alternative Denver parcels endpoint
+          try {
+            const backupResponse = await axios.get(
+              'https://services1.arcgis.com/jN1m8PnLS9ZcTQW9/arcgis/rest/services/Parcels_Map/FeatureServer/0/query',
+              {
+                params: {
+                  geometry: `${lng},${lat}`,
+                  geometryType: 'esriGeometryPoint',
+                  inSR: 4326,
+                  outFields: '*',
+                  returnGeometry: false,
+                  outSR: 4326,
+                  f: 'json'
+                }
+              }
+            );
+            
+            if (backupResponse.data && 
+                backupResponse.data.features && 
+                backupResponse.data.features.length > 0) {
+              const feature = backupResponse.data.features[0].attributes;
+              console.log(`Found Denver parcel from backup API: ${JSON.stringify(feature)}`);
+              return {
+                pin: feature.SCHEDULE_NUMBER || feature.PARCEL_ID || 'Unknown',
+                property_class: feature.LAND_USE || feature.USE_DESC || 'Unknown',
+                township_name: 'DENVER COUNTY',
+                square_footage: feature.LAND_SQFT || feature.AREA_SF ? 
+                  Number(feature.LAND_SQFT || feature.AREA_SF) : undefined
+              };
+            }
+          } catch (backupError) {
+            console.error('Error with backup Denver parcel API:', backupError.message);
           }
         }
-      );
-
-      if (response.data && response.data.length > 0) {
-        console.log(`Found Denver parcel data: ${JSON.stringify(response.data[0])}`);
-        return {
-          pin: response.data[0].schednum || 'Unknown',
-          property_class: response.data[0].landuse || 'Unknown',
-          // Denver doesn't use townships
-          square_footage: response.data[0].land_area ? Number(response.data[0].land_area) : undefined
-        };
+      } catch (e) {
+        console.error(`Error fetching from Denver primary parcel API: ${e.message}`);
       }
+      
+      console.log('All Denver parcel API endpoints failed, returning null');
+      return null;
     } else if (targetCity === 'charlotte') {
       // Mecklenburg County parcel data
       const response = await axios.get(
@@ -784,9 +869,29 @@ export async function GET(request: NextRequest) {
     
     console.log(`Geocoding result: ${JSON.stringify(geocodeResult)}`);
     
+    // Add more detailed logging
+    console.log(`Geocoding successful - Display name: ${geocodeResult.resolvedCity || 'Unknown'}`);
+    console.log(`Coordinates: ${geocodeResult.lat}, ${geocodeResult.lng}`);
+    
     // Destructure coordinates and resolved city
     const { lat, lng, resolvedCity } = geocodeResult;
     // No need for isFallback anymore since we don't use fallback coordinates
+    
+    // Verify coordinates against bounding box as an additional check
+    const isValidCoordinate = validateCoordinatesForCity(lat, lng, city);
+    console.log(`Coordinate validation result: ${isValidCoordinate} for city ${city}`);
+    
+    // Hard boundary check - log detailed information for Denver specific addresses
+    if (city.toLowerCase() === 'denver') {
+      const denverBounds = {
+        minLat: 39.5,
+        maxLat: 40.0,
+        minLng: -105.2,
+        maxLng: -104.7
+      };
+      console.log(`Denver bounds check: lat ${lat} (should be between ${denverBounds.minLat}-${denverBounds.maxLat})`);
+      console.log(`Denver bounds check: lng ${lng} (should be between ${denverBounds.minLng}-${denverBounds.maxLng})`);
+    }
     
     // Step 2: Add city mismatch validation
     if (resolvedCity) {
@@ -851,6 +956,31 @@ export async function GET(request: NextRequest) {
         coordinates: { lat, lng },
         city
       }, { status: 404, headers });
+    }
+    
+    // Add extra validation for Denver addresses to ensure we're not returning Chicago data
+    if (city.toLowerCase() === 'denver') {
+      // These zoning codes should NEVER appear for Denver - they are Chicago-specific
+      const chicagoOnlyZoningCodes = ['DX-16', 'B3-5', 'RT-4', 'RS-3', 'M1-2', 'DC-12'];
+      
+      if (zoningData && chicagoOnlyZoningCodes.includes(zoningData.zoning_classification)) {
+        console.error(`ERROR: Chicago zoning code "${zoningData.zoning_classification}" detected for Denver address!`);
+        return NextResponse.json({
+          error: `Invalid data detected: The zoning classification "${zoningData.zoning_classification}" is not valid for Denver. This appears to be a data mismatch.`,
+          city: 'Denver',
+          coordinates: { lat, lng }
+        }, { status: 400, headers });
+      }
+      
+      // Also check if parcel data has Chicago in the township name
+      if (parcelData && parcelData.township_name && parcelData.township_name.includes('CHICAGO')) {
+        console.error(`ERROR: Chicago township detected for Denver address!`);
+        return NextResponse.json({
+          error: `Invalid data detected: The township "${parcelData.township_name}" is not valid for Denver. This appears to be a data mismatch.`,
+          city: 'Denver',
+          coordinates: { lat, lng }
+        }, { status: 400, headers });
+      }
     }
 
     // Determine appropriate database name based on city for error messages
