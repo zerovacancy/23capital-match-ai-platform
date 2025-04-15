@@ -2,6 +2,10 @@
 
 ## Project Overview
 
+> **API Documentation**: For comprehensive API documentation with examples, please see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md).
+> 
+> **Interactive API Docs**: View and test all APIs using our [Swagger UI Documentation](/docs).
+
 This project is a consulting pitch for LG Development (lg-group.com), a Chicago-based real estate developer. The platform demonstrates an AI-powered solution to streamline their LP (Limited Partner) relationship management, deal pipeline, and capital raising processes.
 
 ## Strategic Alignment
