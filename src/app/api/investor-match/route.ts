@@ -117,17 +117,32 @@ function calculateMatchScore(deal: any, investor: any): number {
 }
 
 export async function POST(request: NextRequest) {
+  // Add CORS headers
+  const headers = new Headers();
+  headers.append('Access-Control-Allow-Origin', '*');
+  headers.append('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  headers.append('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 204, headers });
+  }
+  
   try {
+    console.log('Processing investor match request');
+    
     // Parse the deal information from the request body
     const dealData = await request.json();
+    console.log(`Received deal data: ${JSON.stringify(dealData)}`);
     
     // Validate required fields
     const requiredFields = ['assetType', 'market', 'investmentAmount', 'expectedReturn', 'riskProfile'];
     for (const field of requiredFields) {
       if (!dealData[field]) {
+        console.log(`Missing required field: ${field}`);
         return NextResponse.json({ 
           error: `Missing required field: ${field}`
-        }, { status: 400 });
+        }, { status: 400, headers });
       }
     }
     
@@ -155,17 +170,20 @@ export async function POST(request: NextRequest) {
     // Sort matches by score (highest first)
     matches.sort((a, b) => b.matchScore - a.matchScore);
     
-    // Return the top matches
-    return NextResponse.json({
+    // Create the response
+    const response = {
       deal: dealData,
       matches: matches.slice(0, 3),  // Return top 3 matches
       totalMatches: matches.filter(m => m.matchScore > 50).length  // Count of good matches (>50%)
-    });
+    };
+    
+    console.log(`Sending response with ${response.matches.length} matches`);
+    return NextResponse.json(response, { headers });
   } catch (error) {
     console.error('Error processing investor match request:', error);
     return NextResponse.json(
       { error: 'An error occurred while processing your request' },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }

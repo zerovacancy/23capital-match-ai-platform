@@ -180,6 +180,19 @@ function isBetter(metric: string, value: number, comparison: number): boolean {
 }
 
 export async function GET(request: NextRequest) {
+  // Add CORS headers
+  const headers = new Headers();
+  headers.append('Access-Control-Allow-Origin', '*');
+  headers.append('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  headers.append('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 204, headers });
+  }
+
+  console.log('Processing market comparison request');
+  
   // Extract parameters from the query string
   const searchParams = request.nextUrl.searchParams;
   const city = searchParams.get('city');
@@ -189,38 +202,53 @@ export async function GET(request: NextRequest) {
   const pricePerSqFt = searchParams.get('pricePerSqFt') ? parseFloat(searchParams.get('pricePerSqFt')!) : null;
   const pricePerUnit = searchParams.get('pricePerUnit') ? parseFloat(searchParams.get('pricePerUnit')!) : null;
   
+  console.log(`Query parameters - city: ${city}, assetType: ${assetType}, capRate: ${capRate}, rentPerSqFt: ${rentPerSqFt}, pricePerSqFt: ${pricePerSqFt}, pricePerUnit: ${pricePerUnit}`);
+  
   // Basic validation
   if (!city || !assetType) {
+    console.log('Missing required parameters: city and assetType');
     return NextResponse.json(
       { error: 'City and assetType parameters are required' },
-      { status: 400 }
+      { status: 400, headers }
     );
   }
+  
+  // Handle case-insensitive city names
+  const normalizedCity = Object.keys(marketData).find(
+    c => c.toLowerCase() === city.toLowerCase()
+  ) || city;
   
   // Check if the city and asset type are available in our data
-  if (!marketData[city as keyof typeof marketData]) {
+  if (!marketData[normalizedCity as keyof typeof marketData]) {
+    console.log(`Market data not available for city: ${normalizedCity}`);
     return NextResponse.json(
-      { error: `Market data not available for city: ${city}` },
-      { status: 404 }
+      { error: `Market data not available for city: ${normalizedCity}` },
+      { status: 404, headers }
     );
   }
   
-  const cityData = marketData[city as keyof typeof marketData];
+  const cityData = marketData[normalizedCity as keyof typeof marketData];
   
-  if (!cityData[assetType as keyof typeof cityData]) {
+  // Normalize asset type to match our data structure
+  const normalizedAssetType = Object.keys(cityData).find(
+    a => a.toLowerCase() === assetType.toLowerCase()
+  ) || assetType;
+  
+  if (!cityData[normalizedAssetType as keyof typeof cityData]) {
+    console.log(`Asset type '${normalizedAssetType}' not available for city: ${normalizedCity}`);
     return NextResponse.json(
-      { error: `Asset type '${assetType}' not available for city: ${city}` },
-      { status: 404 }
+      { error: `Asset type '${normalizedAssetType}' not available for city: ${normalizedCity}` },
+      { status: 404, headers }
     );
   }
   
   // Get the market data for the specified city and asset type
-  const marketStats = cityData[assetType as keyof typeof cityData];
+  const marketStats = cityData[normalizedAssetType as keyof typeof cityData];
   
   // Prepare the response
   const response: any = {
-    city,
-    assetType,
+    city: normalizedCity,
+    assetType: normalizedAssetType,
     marketAverages: marketStats,
     comparison: {}
   };
@@ -229,7 +257,7 @@ export async function GET(request: NextRequest) {
   if (capRate !== null) {
     // For cap rate, collect data from all cities for percentile
     const allCapRates = Object.values(marketData)
-      .map(city => city[assetType as keyof typeof city]?.averageCapRate)
+      .map(city => city[normalizedAssetType as keyof typeof city]?.averageCapRate)
       .filter(rate => rate !== undefined) as number[];
       
     const percentile = percentileRank(allCapRates, capRate);
@@ -245,7 +273,7 @@ export async function GET(request: NextRequest) {
   
   if (rentPerSqFt !== null) {
     const allRents = Object.values(marketData)
-      .map(city => city[assetType as keyof typeof city]?.averageRentPerSqFt)
+      .map(city => city[normalizedAssetType as keyof typeof city]?.averageRentPerSqFt)
       .filter(rent => rent !== undefined) as number[];
       
     const percentile = percentileRank(allRents, rentPerSqFt);
@@ -259,9 +287,9 @@ export async function GET(request: NextRequest) {
     };
   }
   
-  if (pricePerSqFt !== null && assetType !== "multifamily") {
+  if (pricePerSqFt !== null && normalizedAssetType !== "multifamily") {
     const allPrices = Object.values(marketData)
-      .map(city => city[assetType as keyof typeof city]?.averagePricePerSqFt)
+      .map(city => city[normalizedAssetType as keyof typeof city]?.averagePricePerSqFt)
       .filter(price => price !== undefined) as number[];
       
     const percentile = percentileRank(allPrices, pricePerSqFt);
@@ -275,7 +303,7 @@ export async function GET(request: NextRequest) {
     };
   }
   
-  if (pricePerUnit !== null && assetType === "multifamily") {
+  if (pricePerUnit !== null && normalizedAssetType === "multifamily") {
     const allPrices = Object.values(marketData)
       .map(city => city["multifamily"]?.averagePricePerUnit)
       .filter(price => price !== undefined) as number[];
@@ -320,7 +348,7 @@ export async function GET(request: NextRequest) {
   
   // Add market context
   response.marketContext = {
-    vacancyRate: `${marketStats.vacancyRate}% vacancy rate in ${city} for ${assetType} properties`,
+    vacancyRate: `${marketStats.vacancyRate}% vacancy rate in ${normalizedCity} for ${normalizedAssetType} properties`,
     yearOverYearValueChange: `${marketStats.yearOverYearValueChange > 0 ? '+' : ''}${marketStats.yearOverYearValueChange}% year-over-year value change`,
     marketTrend: marketStats.yearOverYearValueChange > 3 
       ? "Strong growth market" 
@@ -329,5 +357,6 @@ export async function GET(request: NextRequest) {
         : "Declining market"
   };
   
-  return NextResponse.json(response);
+  console.log(`Generated ${response.insights.length} insights for the response`);
+  return NextResponse.json(response, { headers });
 }
