@@ -1,0 +1,266 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Real Estate Market Comparison API",
+    "description": "Compare real estate deal metrics against local market averages.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://capital-match-ai-platform.vercel.app/api",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/market-comparison": {
+      "get": {
+        "summary": "Compare real estate metrics against market averages",
+        "operationId": "getMarketComparison",
+        "tags": [
+          "Market Analysis"
+        ],
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "description": "The city to compare against (e.g., Chicago, New York, Los Angeles, Miami, Dallas)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Chicago"
+            }
+          },
+          {
+            "name": "assetType",
+            "in": "query",
+            "description": "The type of real estate asset",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "multifamily",
+                "office",
+                "retail",
+                "industrial"
+              ],
+              "example": "multifamily"
+            }
+          },
+          {
+            "name": "capRate",
+            "in": "query",
+            "description": "The capitalization rate (%) of the property",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "example": 5.5
+            }
+          },
+          {
+            "name": "rentPerSqFt",
+            "in": "query",
+            "description": "The rent per square foot ($) of the property",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "example": 2.25
+            }
+          },
+          {
+            "name": "pricePerSqFt",
+            "in": "query",
+            "description": "The price per square foot ($) of the property (for office, retail, industrial)",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "example": 250
+            }
+          },
+          {
+            "name": "pricePerUnit",
+            "in": "query",
+            "description": "The price per unit ($) of the property (for multifamily)",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "example": 200000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful comparison of property metrics against market averages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string",
+                      "example": "Chicago"
+                    },
+                    "assetType": {
+                      "type": "string",
+                      "example": "multifamily"
+                    },
+                    "marketAverages": {
+                      "type": "object",
+                      "properties": {
+                        "averageCapRate": {
+                          "type": "number",
+                          "example": 5.2
+                        },
+                        "averageRentPerSqFt": {
+                          "type": "number",
+                          "example": 2.15
+                        },
+                        "vacancyRate": {
+                          "type": "number",
+                          "example": 5.7
+                        },
+                        "averagePricePerUnit": {
+                          "type": "number",
+                          "example": 225000
+                        },
+                        "yearOverYearValueChange": {
+                          "type": "number",
+                          "example": 3.5
+                        }
+                      }
+                    },
+                    "comparison": {
+                      "type": "object",
+                      "properties": {
+                        "capRate": {
+                          "type": "object",
+                          "properties": {
+                            "userValue": {
+                              "type": "number",
+                              "example": 5.5
+                            },
+                            "marketAverage": {
+                              "type": "number",
+                              "example": 5.2
+                            },
+                            "percentile": {
+                              "type": "number",
+                              "example": 45
+                            },
+                            "difference": {
+                              "type": "number",
+                              "example": 0.3
+                            },
+                            "isBetterThanMarket": {
+                              "type": "boolean",
+                              "example": false
+                            },
+                            "rating": {
+                              "type": "string",
+                              "example": "Average"
+                            }
+                          }
+                        },
+                        "rentPerSqFt": {
+                          "type": "object",
+                          "properties": {
+                            "userValue": {
+                              "type": "number",
+                              "example": 2.25
+                            },
+                            "marketAverage": {
+                              "type": "number",
+                              "example": 2.15
+                            },
+                            "percentile": {
+                              "type": "number",
+                              "example": 60
+                            },
+                            "difference": {
+                              "type": "number",
+                              "example": 0.1
+                            },
+                            "isBetterThanMarket": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "rating": {
+                              "type": "string",
+                              "example": "Average"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "insights": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "The cap rate of 5.5% is below the market average of 5.2%.",
+                        "The rent of $2.25/sqft is higher than the market average of $2.15/sqft."
+                      ]
+                    },
+                    "marketContext": {
+                      "type": "object",
+                      "properties": {
+                        "vacancyRate": {
+                          "type": "string",
+                          "example": "5.7% vacancy rate in Chicago for multifamily properties"
+                        },
+                        "yearOverYearValueChange": {
+                          "type": "string",
+                          "example": "+3.5% year-over-year value change"
+                        },
+                        "marketTrend": {
+                          "type": "string",
+                          "example": "Strong growth market"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing required parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "City and assetType parameters are required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Market data not available for the specified city or asset type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Market data not available for city: Phoenix"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
