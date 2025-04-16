@@ -54,8 +54,13 @@ async function geocodeAddress(address: string, city?: string): Promise<Geocoding
   try {
     console.log(`Geocoding address: ${address} in city: ${city || 'unknown'}`);
     
-    // Default to Chicago if no city specified
-    const targetCity = (city || 'chicago').toLowerCase();
+    // City must be specified
+    if (!city) {
+      console.log('City parameter is required but not provided in geocodeAddress');
+      return null;
+    }
+    
+    const targetCity = city.toLowerCase();
     
     // Check if address contains any of our known landmarks (for Chicago)
     if (targetCity === 'chicago') {
@@ -302,8 +307,13 @@ async function fetchZoningData(lat: number, lng: number, city?: string): Promise
   try {
     console.log(`Fetching zoning data for coordinates: ${lat}, ${lng} in city: ${city || 'unknown'}`);
     
-    // Default to Chicago if no city specified
-    const targetCity = (city || 'chicago').toLowerCase();
+    // City must be specified
+    if (!city) {
+      console.log('City parameter is required but not provided in fetchZoningData');
+      return null;
+    }
+    
+    const targetCity = city.toLowerCase();
     
     // City-specific API calls using Socrata Open Data API (SODA)
     if (targetCity === 'chicago') {
@@ -725,8 +735,13 @@ async function fetchZoningData(lat: number, lng: number, city?: string): Promise
 // Helper function to get mock zoning data based on coordinates and city
 // IMPORTANT: This should only be used for Chicago as a last resort
 function getMockZoningDataForCity(lat: number, lng: number, city?: string): ZoningData | null {
-  // Default to Chicago if city not specified 
-  const targetCity = (city || 'chicago').toLowerCase();
+  // City must be specified
+  if (!city) {
+    console.log('City parameter is required but not provided in getMockZoningDataForCity');
+    return null;
+  }
+  
+  const targetCity = city.toLowerCase();
   
   // Only return mock data for Chicago - for all other cities, return null
   // This prevents any possibility of Chicago mock data leaking into other city results
@@ -848,8 +863,13 @@ async function fetchParcelData(lat: number, lng: number, city?: string): Promise
   try {
     console.log(`Fetching parcel data for coordinates: ${lat}, ${lng} in city: ${city || 'unknown'}`);
     
-    // Default to Chicago if no city specified
-    const targetCity = (city || 'chicago').toLowerCase();
+    // City must be specified
+    if (!city) {
+      console.log('City parameter is required but not provided in fetchParcelData');
+      return null;
+    }
+    
+    const targetCity = city.toLowerCase();
     
     // City-specific data sources using Socrata Open Data API (SODA)
     if (targetCity === 'chicago') {
@@ -1368,7 +1388,15 @@ export async function GET(request: NextRequest) {
   // Extract address and city from query parameters
   const searchParams = request.nextUrl.searchParams;
   const address = searchParams.get('address');
-  const city = searchParams.get('city') || 'chicago'; // Default to Chicago if not specified
+  const city = searchParams.get('city');
+  
+  // Both address and city are required parameters
+  if (!city) {
+    return NextResponse.json(
+      { error: 'City parameter is required. Please specify a supported city (chicago, denver, charlotte, raleigh, nashville).' },
+      { status: 400, headers }
+    );
+  }
 
   if (!address) {
     return NextResponse.json(
