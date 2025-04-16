@@ -723,50 +723,27 @@ async function fetchZoningData(lat: number, lng: number, city?: string): Promise
 }
 
 // Helper function to get mock zoning data based on coordinates and city
-function getMockZoningDataForCity(lat: number, lng: number, city?: string): ZoningData {
-  // Default to Chicago if city not specified or not supported
+// IMPORTANT: This should only be used for Chicago as a last resort
+function getMockZoningDataForCity(lat: number, lng: number, city?: string): ZoningData | null {
+  // Default to Chicago if city not specified 
   const targetCity = (city || 'chicago').toLowerCase();
   
-  if (targetCity === 'chicago') {
-    return getMockZoningData(lat, lng);
+  // Only return mock data for Chicago - for all other cities, return null
+  // This prevents any possibility of Chicago mock data leaking into other city results
+  if (targetCity !== 'chicago') {
+    console.log(`Mock data requested for ${targetCity}, returning null to prevent data leakage`);
+    return null;
   }
   
-  // For other cities, determine zone type based on coordinates
-  // This is a simplification that approximates downtown usually being in center
-  const cityCoords = CITY_FALLBACK_COORDINATES[targetCity as keyof typeof CITY_FALLBACK_COORDINATES];
-  if (!cityCoords) {
-    return getMockZoningData(lat, lng); // Default to Chicago zoning if city not found
-  }
-  
-  // Calculate distance from city center
-  const distance = Math.sqrt(
-    Math.pow(lat - cityCoords.lat, 2) + 
-    Math.pow(lng - cityCoords.lng, 2)
-  );
-  
-  // Get zoning data for the target city
-  const cityZoningData = CITY_ZONING_DATA[targetCity as keyof typeof CITY_ZONING_DATA];
-  
-  if (!cityZoningData) {
-    return getMockZoningData(lat, lng); // Default to Chicago zoning if city data not found
-  }
-  
-  // Determine zone type based on distance from center and angle
-  if (distance < 0.01) {
-    return cityZoningData.downtown;
-  } else if (distance < 0.03) {
-    return cityZoningData.commercial;
-  } else if (distance < 0.05) {
-    return cityZoningData.residential_high;
-  } else if (distance < 0.08) {
-    return cityZoningData.residential_low;
-  } else {
-    return cityZoningData.industrial;
-  }
+  return getMockZoningData(lat, lng);
 }
 
 // Helper function to get mock zoning data based on coordinates
+// IMPORTANT: This is ONLY to be used for Chicago, never for other cities
 function getMockZoningData(lat: number, lng: number): ZoningData {
+  console.log(`Using Chicago mock zoning data for coordinates: ${lat}, ${lng}`);
+  console.log('IMPORTANT: Mock zoning data should only be used for Chicago as a last resort');
+  
   // Calculate rough area of Chicago based on coordinates
   const isDowntown = lat > 41.87 && lat < 41.89 && lng > -87.64 && lng < -87.62;
   const isNorth = lat > 41.90;
@@ -781,99 +758,35 @@ function getMockZoningData(lat: number, lng: number): ZoningData {
   return MOCK_ZONING_DATA.loop;
 }
 
-// Mock parcel data for when external API fails
-function generateMockParcelData(lat: number, lng: number, city?: string): ParcelData {
+// We no longer generate mock parcel data
+// Instead we return null for all cities to force the API to return a clear error
+function generateMockParcelData(lat: number, lng: number, city?: string): ParcelData | null {
+  // Log the attempt to generate mock data
+  console.log(`Mock parcel data requested for ${city || 'unknown city'} at ${lat}, ${lng}`);
+  console.log('IMPORTANT: We no longer generate mock data to avoid misleading results');
+  
+  // Only return mock data for Chicago as a last resort
+  const targetCity = (city || '').toLowerCase();
+  if (targetCity !== 'chicago') {
+    console.log(`Refusing to generate mock parcel data for non-Chicago city: ${targetCity}`);
+    return null;
+  }
+  
+  // For Chicago only - generate minimal mock data as a last resort
+  console.log('Generating minimal mock data for Chicago');
+  
   // Create somewhat realistic PIN based on coordinates
   const latPart = Math.floor(lat * 100) % 100;
   const lngPart = Math.floor(Math.abs(lng) * 100) % 100;
   const random = Math.floor(Math.random() * 9000) + 1000;
   
-  // Adjust PIN format based on city
-  let pin = `17${latPart}${lngPart}${random}0000`; // Chicago default
-  
-  // Cities with different PIN formats
-  if (city?.toLowerCase() === 'denver') {
-    // Denver uses 10-digit PINs with different format
-    pin = `0${latPart}${lngPart}${random}000`;
-  } else if (city?.toLowerCase() === 'charlotte' || city?.toLowerCase() === 'raleigh') {
-    // NC cities use different format
-    pin = `${latPart}${lngPart}${random}`;
-  }
-  
-  // Determine property class based on appropriate city's mock zoning
-  let propertyClass = '2-00'; // Default residential
-  
-  if (city?.toLowerCase() === 'denver') {
-    // Denver-specific property classes
-    const denverZoning = getMockZoningDataForCity(lat, lng, 'denver');
-    if (denverZoning.zoning_classification.startsWith('C-MX')) {
-      propertyClass = 'COM-MX'; // Commercial mixed-use
-    } else if (denverZoning.zoning_classification.startsWith('I-')) {
-      propertyClass = 'IND'; // Industrial
-    } else if (denverZoning.zoning_classification.startsWith('G-MU')) {
-      propertyClass = 'RES-MU'; // Residential mixed-use
-    } else if (denverZoning.zoning_classification.startsWith('U-SU')) {
-      propertyClass = 'RES-SU'; // Residential single-unit
-    }
-  } else if (city?.toLowerCase() === 'charlotte' || city?.toLowerCase() === 'raleigh' || 
-             city?.toLowerCase() === 'nashville') {
-    // Use city-specific zoning patterns for other cities
-    const cityZoning = getMockZoningDataForCity(lat, lng, city);
-    if (cityZoning.zoning_classification.includes('MU') || 
-        cityZoning.zoning_classification.includes('MX')) {
-      propertyClass = 'MXD'; // Mixed-use
-    } else if (cityZoning.zoning_classification.includes('IND') || 
-              cityZoning.zoning_classification.includes('I-')) {
-      propertyClass = 'IND'; // Industrial
-    } else if (cityZoning.zoning_classification.includes('RES') || 
-              cityZoning.zoning_classification.startsWith('R')) {
-      propertyClass = 'RES'; // Residential
-    } else {
-      propertyClass = 'COM'; // Commercial (default for urban zoning)
-    }
-  } else {
-    // Chicago-style property classes (default)
-    const chicagoZoning = getMockZoningData(lat, lng);
-    if (chicagoZoning.zoning_classification.startsWith('D')) {
-      propertyClass = '5-95'; // Commercial downtown
-    } else if (chicagoZoning.zoning_classification.startsWith('B')) {
-      propertyClass = '5-91'; // Commercial
-    } else if (chicagoZoning.zoning_classification.startsWith('M')) {
-      propertyClass = '5-97'; // Industrial
-    } else if (chicagoZoning.zoning_classification.startsWith('R')) {
-      if (chicagoZoning.zoning_classification.includes('T')) {
-        propertyClass = '2-11'; // Multi-unit residential
-      } else {
-        propertyClass = '2-03'; // Single family
-      }
-    }
-  }
-  
-  // Calculate mock square footage
-  const sqFt = Math.floor((Math.random() * 5000) + 1000);
-  
-  // Base parcel data
-  const parcelData: ParcelData = {
-    pin,
-    property_class: propertyClass,
-    square_footage: sqFt
+  // Base parcel data - for Chicago only
+  return {
+    pin: `17${latPart}${lngPart}${random}0000`,
+    property_class: '2-00', // Default residential
+    township_name: 'CHICAGO',
+    square_footage: Math.floor((Math.random() * 5000) + 1000)
   };
-  
-  // Add township name only for cities that use this concept
-  // Chicago and some Illinois municipalities use townships
-  if (!city || city.toLowerCase() === 'chicago') {
-    parcelData.township_name = 'CHICAGO';
-  } else if (city.toLowerCase() === 'denver') {
-    // Denver doesn't use townships, but has assessor districts
-    parcelData.township_name = 'DENVER COUNTY'; // Add proper county name instead of omitting
-  } else if (city.toLowerCase() === 'nashville') {
-    parcelData.township_name = 'DAVIDSON COUNTY';
-  } else if (city.toLowerCase() === 'charlotte' || city.toLowerCase() === 'raleigh') {
-    // NC cities use counties instead of townships
-    parcelData.township_name = city.toLowerCase() === 'charlotte' ? 'MECKLENBURG COUNTY' : 'WAKE COUNTY';
-  }
-  
-  return parcelData;
 }
 
 // Function to validate coordinates for a given city
@@ -1559,8 +1472,9 @@ export async function GET(request: NextRequest) {
     // If either zoning or parcel data are null, return a 404 error
     // This is a stricter validation that prevents any mock data fallbacks
     if (zoningData === null || parcelData === null) {
+      console.log(`Returning 404: No valid data for ${address} in ${city} at coordinates ${lat}, ${lng}`);
       return NextResponse.json({
-        error: `No valid parcel or zoning data could be retrieved for this address in ${city}. Please check the address or try another.`,
+        error: `No zoning data could be retrieved for this location in ${city}. Please check the address or try a nearby location.`,
         coordinates: { lat, lng },
         city
       }, { status: 404, headers });
@@ -1622,19 +1536,19 @@ export async function GET(request: NextRequest) {
       // For now, only add sample data for certain cities
       if (city?.toLowerCase() === 'chicago' && zoningData) {
         // Chicago uses special character areas and overlays
-        if (coordinates.lat > 41.88 && coordinates.lat < 41.9 && coordinates.lng > -87.64 && coordinates.lng < -87.62) {
+        if (lat > 41.88 && lat < 41.9 && lng > -87.64 && lng < -87.62) {
           overlayDistricts = ['Downtown Character Overlay', 'TOD-1'];
-        } else if (coordinates.lat > 41.9 && coordinates.lng > -87.67) {
+        } else if (lat > 41.9 && lng > -87.67) {
           overlayDistricts = ['Neighborhood Preservation Overlay'];
         }
       } else if (city?.toLowerCase() === 'denver' && zoningData) {
         // Denver has more detailed overlay districts
-        if (coordinates.lat > 39.74 && coordinates.lat < 39.75 && coordinates.lng > -104.99 && coordinates.lng < -104.98) {
+        if (lat > 39.74 && lat < 39.75 && lng > -104.99 && lng < -104.98) {
           overlayDistricts = ['Downtown Design Overlay', 'UO-1 (Transit Overlay)'];
         }
       } else if (city?.toLowerCase() === 'charlotte' && zoningData) {
         // Charlotte has TOD overlays
-        if (coordinates.lat > 35.22 && coordinates.lat < 35.23 && coordinates.lng > -80.84 && coordinates.lng < -80.83) {
+        if (lat > 35.22 && lat < 35.23 && lng > -80.84 && lng < -80.83) {
           overlayDistricts = ['TOD-UC (Transit Urban Center)', 'Opportunity Zone'];
         }
       }
