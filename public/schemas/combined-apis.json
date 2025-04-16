@@ -43,10 +43,6 @@
     {
       "url": "https://capital-match-ai-platform.vercel.app/api",
       "description": "Production server"
-    },
-    {
-      "url": "/api",
-      "description": "Local API server"
     }
   ],
   "paths": {
