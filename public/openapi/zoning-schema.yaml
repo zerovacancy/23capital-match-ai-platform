@@ -4,8 +4,8 @@ info:
   description: An API to retrieve parcel and zoning information for properties in Chicago.
   version: 1.0.0
 servers:
-  - url: https://capital-match-ai-platform.vercel.app/api
-    description: Production server
+  - url: /api
+    description: Local API server
 paths:
   /zoning:
     get:

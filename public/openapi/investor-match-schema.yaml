@@ -4,8 +4,8 @@ info:
   description: An API to match real estate deals with potential investors based on preferences and criteria.
   version: 1.0.0
 servers:
-  - url: https://capital-match-ai-platform.vercel.app/api
-    description: Production server
+  - url: /api
+    description: Local API server
 paths:
   /investor-match:
     post:

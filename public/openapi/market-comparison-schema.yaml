@@ -4,8 +4,8 @@ info:
   description: Compare real estate deal metrics against local market averages.
   version: 1.0.0
 servers:
-  - url: https://capital-match-ai-platform.vercel.app/api
-    description: Production server
+  - url: /api
+    description: Local API server
 paths:
   /market-comparison:
     get:
