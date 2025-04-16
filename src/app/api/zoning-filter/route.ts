@@ -1,26 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { ZoningFilterSchema } from '@/schemas/zoning-schema';
+import type { ZoningFilterRequest } from '@/schemas/zoning-schema';
 
-interface ZoningFilterRequest {
-  city: string;
-  filters: {
-    zoning_districts?: string[];
-    min_lot_size?: number;
-    max_lot_size?: number;
-    overlays?: string[];
-    opportunity_zone?: boolean;
-    proximity_to_transit?: number;
-  };
-  boundary?: {
-    center?: {
-      lat: number;
-      lng: number;
-    };
-    radius?: number;
-    neighborhood?: string;
-  };
-}
-
+// Type definitions are handled by ZoningFilterSchema; ParcelResult remains for response typing
 interface ParcelResult {
   address: string;
   parcel_id: string;
@@ -194,6 +177,7 @@ function filterParcels(parcels: ParcelResult[], filters: ZoningFilterRequest['fi
 }
 
 export async function POST(request: NextRequest) {
+  console.log('Zoning-filter POST called:', { method: request.method, url: request.url, headers: Object.fromEntries(request.headers.entries()) });
   // Add CORS headers
   const headers = new Headers();
   headers.append('Access-Control-Allow-Origin', '*');
@@ -206,44 +190,27 @@ export async function POST(request: NextRequest) {
   }
   
   try {
-    // Get the request body
-    const requestBody: ZoningFilterRequest = await request.json();
-    
-    // Validate required parameters
-    if (!requestBody.city) {
-      return NextResponse.json({ 
-        error: 'City parameter is required' 
-      }, { status: 400, headers });
+    // Parse and validate request body against schema
+    const body = await request.json();
+    const parsed = ZoningFilterSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400, headers });
     }
-    
-    if (!requestBody.filters) {
-      return NextResponse.json({ 
-        error: 'Filters parameter is required' 
-      }, { status: 400, headers });
-    }
-    
-    // Check if city is supported
-    const supportedCities = ['charlotte', 'raleigh'];
-    const targetCity = requestBody.city.toLowerCase();
-    
-    if (!supportedCities.includes(targetCity)) {
-      return NextResponse.json({ 
-        error: `City '${requestBody.city}' is not supported. Supported cities: Charlotte, Raleigh.` 
-      }, { status: 400, headers });
-    }
-    
-    // Get the appropriate parcels data based on city
+    const { city, filters, boundary } = parsed.data;
+
+    // Determine target city in lowercase
+    const targetCity = city.toLowerCase();
     const parcelsData = targetCity === 'charlotte' ? CHARLOTTE_PARCELS : RALEIGH_PARCELS;
-    
-    // Apply filters to parcels
-    const filteredParcels = filterParcels(parcelsData, requestBody.filters, requestBody.boundary);
+
+    // Filter parcels
+    const filteredParcels = filterParcels(parcelsData, filters, boundary);
     
     // Prepare the response
     const response = {
-      city: requestBody.city,
+      city,
       parcels_found: filteredParcels.length,
       parcels: filteredParcels,
-      filter_applied: requestBody.filters
+      filter_applied: filters
     };
     
     return NextResponse.json(response, { headers });
