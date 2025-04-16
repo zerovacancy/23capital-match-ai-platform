@@ -18,6 +18,7 @@
     { "source": "/api/zoning", "destination": "/api/zoning" },
     { "source": "/api/investor-match", "destination": "/api/investor-match" },
     { "source": "/api/market-comparison", "destination": "/api/market-comparison" },
+    { "source": "/api/tod-overlay", "destination": "/api/tod-overlay.cjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
