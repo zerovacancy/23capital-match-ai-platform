@@ -67,11 +67,18 @@
                   "city": {
                     "type": "string",
                     "description": "The city to search parcels",
-                    "example": "Charlotte",
                     "enum": [
+                      "Chicago",
+                      "Denver",
                       "Charlotte",
-                      "Raleigh"
-                    ]
+                      "Raleigh",
+                      "Nashville",
+                      "New York",
+                      "Los Angeles",
+                      "Miami",
+                      "Dallas"
+                    ],
+                    "example": "Denver"
                   },
                   "filters": {
                     "type": "object",
@@ -155,7 +162,7 @@
                   "properties": {
                     "city": {
                       "type": "string",
-                      "example": "Charlotte"
+                      "example": "Denver"
                     },
                     "parcels_found": {
                       "type": "number",
@@ -168,7 +175,7 @@
                         "properties": {
                           "address": {
                             "type": "string",
-                            "example": "401 N Tryon St, Charlotte, NC"
+                            "example": "1700 Lincoln St, Denver, CO"
                           },
                           "parcel_id": {
                             "type": "string",
@@ -255,8 +262,15 @@
             "schema": {
               "type": "string",
               "enum": [
+                "Chicago",
+                "Denver",
                 "Charlotte",
-                "Raleigh"
+                "Raleigh",
+                "Nashville",
+                "New York",
+                "Los Angeles",
+                "Miami",
+                "Dallas"
               ],
               "example": "Charlotte"
             }
@@ -514,7 +528,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "example": "Willis Tower, Chicago"
+            "example": "1700 Lincoln St, Denver, CO"
             }
           },
           {
@@ -529,9 +543,13 @@
                 "Denver",
                 "Charlotte",
                 "Raleigh",
-                "Nashville"
+                "Nashville",
+                "New York",
+                "Los Angeles",
+                "Miami",
+                "Dallas"
               ],
-              "example": "Chicago"
+              "example": "Denver"
             }
           }
         ],
@@ -561,7 +579,7 @@
                       "properties": {
                         "zoning_classification": {
                           "type": "string",
-                          "example": "B3-5"
+                          "example": "C-MX-8"
                         },
                         "description": {
                           "type": "string",
@@ -589,7 +607,7 @@
                         },
                         "township_name": {
                           "type": "string",
-                          "example": "CHICAGO"
+                          "example": "DENVER COUNTY"
                         },
                         "square_footage": {
                           "type": "number",
@@ -599,11 +617,11 @@
                     },
                     "address_queried": {
                       "type": "string",
-                      "example": "Willis Tower, Chicago"
+                      "example": "1700 Lincoln St, Denver, CO"
                     },
                     "city": {
                       "type": "string",
-                      "example": "Chicago"
+                      "example": "Denver"
                     }
                   }
                 }
@@ -796,6 +814,22 @@
               }
             }
           },
+          "404": {
+            "description": "Parcel or zoning data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "No zoning information found for the given address"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "400": {
             "description": "Bad request - missing required parameters",
             "content": {
@@ -841,8 +875,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "Denver",
                 "Chicago",
+                "Denver",
                 "Charlotte",
                 "Raleigh",
                 "Nashville",
