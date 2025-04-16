@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore scratch files
+debug-geocode.js
+
+# Ignore untracked logo images
+/public/assets/images/global/logos/lg-development/lg_logo.png
+/public/assets/images/global/logos/lg-logo.png
