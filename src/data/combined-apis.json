@@ -1,0 +1,666 @@
+{
+  "mcp_definitions": {
+    "version": "1.0.0",
+    "context_schemas": [
+      {
+        "name": "LPMatchingContext",
+        "description": "Context for matching limited partners with investment deals",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "lp": {
+              "type": "object",
+              "description": "Limited partner information",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "tier": { "type": "string", "enum": ["Tier 1", "Tier 2", "Tier 3"] },
+                "investmentCriteria": {
+                  "type": "object",
+                  "properties": {
+                    "geographicPreferences": { 
+                      "type": "array", 
+                      "items": { "type": "string" } 
+                    },
+                    "productTypePreferences": { 
+                      "type": "array", 
+                      "items": { "type": "string" } 
+                    },
+                    "investmentParameters": {
+                      "type": "object",
+                      "properties": {
+                        "targetIRR": { "type": "number" },
+                        "targetEM": { "type": "number" },
+                        "minInvestment": { "type": "number" },
+                        "maxInvestment": { "type": "number" },
+                        "investmentHorizon": { "type": "number" }
+                      }
+                    },
+                    "riskTolerance": { "type": "string" }
+                  }
+                },
+                "relationshipHistory": {
+                  "type": "object",
+                  "properties": {
+                    "pastInvestments": { "type": "number" },
+                    "communicationFrequency": { "type": "string" },
+                    "relationshipStrength": { "type": "number" }
+                  }
+                }
+              }
+            },
+            "deal": {
+              "type": "object",
+              "description": "Deal information",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "location": { "type": "string" },
+                "type": { "type": "string" },
+                "financialMetrics": {
+                  "type": "object",
+                  "properties": {
+                    "projectedIRR": { "type": "number" },
+                    "projectedEM": { "type": "number" },
+                    "cashOnCash": { "type": "number" }
+                  }
+                },
+                "capitalRequirements": {
+                  "type": "object",
+                  "properties": {
+                    "totalInvestment": { "type": "number" },
+                    "minInvestment": { "type": "number" }
+                  }
+                },
+                "timeline": {
+                  "type": "object",
+                  "properties": {
+                    "acquisitionDate": { "type": "string", "format": "date" },
+                    "projectedExit": { "type": "string", "format": "date" }
+                  }
+                }
+              }
+            },
+            "marketData": {
+              "type": "object",
+              "description": "Market data for the deal's location",
+              "properties": {
+                "marketName": { "type": "string" },
+                "metrics": {
+                  "type": "object",
+                  "properties": {
+                    "rentalGrowth": { "type": "number" },
+                    "occupancyRate": { "type": "number" },
+                    "jobGrowth": { "type": "number" },
+                    "populationGrowth": { "type": "number" },
+                    "incomeGrowth": { "type": "number" },
+                    "supplyPipeline": { "type": "number" }
+                  }
+                },
+                "relativeStrength": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "response_schemas": [
+      {
+        "name": "MatchResponse",
+        "description": "AI-generated match assessment between an LP and a deal",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "confidenceScore": { 
+              "type": "number", 
+              "description": "Match confidence score from 0-100"
+            },
+            "factors": { 
+              "type": "array",
+              "description": "Individual match factors",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "factor": { "type": "string" },
+                  "score": { "type": "number" },
+                  "contribution": { "type": "number" },
+                  "explanation": { "type": "string" }
+                }
+              }
+            },
+            "recommendedApproach": { 
+              "type": "string",
+              "description": "Recommended outreach approach"
+            },
+            "keyTalkingPoints": { 
+              "type": "array", 
+              "items": { "type": "string" },
+              "description": "Key talking points for LP outreach"
+            }
+          }
+        }
+      },
+      {
+        "name": "MarketAnalysisResponse",
+        "description": "AI-generated market analysis",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "analysisText": { 
+              "type": "string",
+              "description": "Overall market analysis"
+            },
+            "dealStrengths": { 
+              "type": "array", 
+              "items": { "type": "string" },
+              "description": "Strengths of the deal in this market"
+            },
+            "dealChallenges": { 
+              "type": "array", 
+              "items": { "type": "string" },
+              "description": "Challenges of the deal in this market"
+            },
+            "recommendation": { 
+              "type": "string",
+              "description": "Overall recommendation"
+            }
+          }
+        }
+      }
+    ],
+    "tools": [
+      {
+        "name": "getMatchConfidence",
+        "description": "Determines the match confidence between an LP and a deal",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "lpId": { "type": "string" },
+            "dealId": { "type": "string" }
+          },
+          "required": ["lpId", "dealId"]
+        },
+        "output_schema": {
+          "$ref": "#/mcp_definitions/response_schemas/0/schema"
+        }
+      },
+      {
+        "name": "getMarketAnalysis",
+        "description": "Analyzes market data for a specific deal",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "dealId": { "type": "string" }
+          },
+          "required": ["dealId"]
+        },
+        "output_schema": {
+          "$ref": "#/mcp_definitions/response_schemas/1/schema"
+        }
+      }
+    ]
+  },
+  "openapi": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Capital Match AI Platform API",
+      "version": "1.0.0",
+      "description": "API for matching limited partners with investment deals"
+    },
+    "servers": [
+      {
+        "url": "https://api.capitalmatch.example.com/v1",
+        "description": "Production server"
+      }
+    ],
+    "paths": {
+      "/lps": {
+        "get": {
+          "summary": "Get all LPs",
+          "operationId": "getLPs",
+          "responses": {
+            "200": {
+              "description": "List of LPs",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/LP"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/lps/{id}": {
+        "get": {
+          "summary": "Get LP by ID",
+          "operationId": "getLPById",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "LP details",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LP"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/deals": {
+        "get": {
+          "summary": "Get all deals",
+          "operationId": "getDeals",
+          "responses": {
+            "200": {
+              "description": "List of deals",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Deal"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/deals/{id}": {
+        "get": {
+          "summary": "Get deal by ID",
+          "operationId": "getDealById",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Deal details",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Deal"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/matches": {
+        "get": {
+          "summary": "Get all matches",
+          "operationId": "getMatches",
+          "responses": {
+            "200": {
+              "description": "List of matches",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Match"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Generate a match",
+          "operationId": "generateMatch",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "lpId": {
+                      "type": "string"
+                    },
+                    "dealId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["lpId", "dealId"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Generated match",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/MatchResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/market-analysis/{dealId}": {
+        "get": {
+          "summary": "Get market analysis for a deal",
+          "operationId": "getMarketAnalysis",
+          "parameters": [
+            {
+              "name": "dealId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Market analysis",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/MarketAnalysisResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "LP": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "tier": {
+              "type": "string",
+              "enum": ["Tier 1", "Tier 2", "Tier 3"]
+            },
+            "geographicPreferences": {
+              "type": "object",
+              "properties": {
+                "primary": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "secondary": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "productPreferences": {
+              "type": "object",
+              "properties": {
+                "primary": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "secondary": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "investmentParameters": {
+              "type": "object",
+              "properties": {
+                "targetIRR": {
+                  "type": "number"
+                },
+                "targetEM": {
+                  "type": "number"
+                },
+                "minInvestment": {
+                  "type": "number"
+                },
+                "maxInvestment": {
+                  "type": "number"
+                },
+                "investmentHorizon": {
+                  "type": "number"
+                }
+              }
+            },
+            "riskTolerance": {
+              "type": "string",
+              "enum": ["Conservative", "Moderate", "Aggressive"]
+            },
+            "relationshipStrength": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "lastContact": {
+              "type": "string",
+              "format": "date"
+            },
+            "preferredContact": {
+              "type": "string",
+              "enum": ["Email", "Phone", "In-Person"]
+            },
+            "contactFrequency": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "Bi-Annually"]
+            },
+            "notes": {
+              "type": "string"
+            }
+          },
+          "required": ["id", "name", "tier"]
+        },
+        "Deal": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "financialMetrics": {
+              "type": "object",
+              "properties": {
+                "projectedIRR": {
+                  "type": "number"
+                },
+                "projectedEM": {
+                  "type": "number"
+                },
+                "cashOnCash": {
+                  "type": "number"
+                }
+              }
+            },
+            "capitalRequirements": {
+              "type": "object",
+              "properties": {
+                "totalInvestment": {
+                  "type": "number"
+                },
+                "minInvestment": {
+                  "type": "number"
+                }
+              }
+            },
+            "timeline": {
+              "type": "object",
+              "properties": {
+                "acquisitionDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "projectedExit": {
+                  "type": "string",
+                  "format": "date"
+                }
+              }
+            },
+            "highlights": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["id", "name", "location", "type"]
+        },
+        "Match": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "lpId": {
+              "type": "string"
+            },
+            "dealId": {
+              "type": "string"
+            },
+            "confidenceScore": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "factors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "factor": {
+                    "type": "string"
+                  },
+                  "score": {
+                    "type": "number"
+                  },
+                  "contribution": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": ["id", "lpId", "dealId", "confidenceScore"]
+        },
+        "MatchResponse": {
+          "type": "object",
+          "properties": {
+            "confidenceScore": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "factors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "factor": {
+                    "type": "string"
+                  },
+                  "score": {
+                    "type": "number"
+                  },
+                  "contribution": {
+                    "type": "number"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "recommendedApproach": {
+              "type": "string"
+            },
+            "keyTalkingPoints": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["confidenceScore", "factors"]
+        },
+        "MarketAnalysisResponse": {
+          "type": "object",
+          "properties": {
+            "analysisText": {
+              "type": "string"
+            },
+            "dealStrengths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dealChallenges": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "recommendation": {
+              "type": "string"
+            }
+          },
+          "required": ["analysisText"]
+        }
+      }
+    }
+  }
+}
