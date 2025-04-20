@@ -10,6 +10,7 @@ import BreadcrumbNav from '@/components/BreadcrumbNav';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, ExternalLink, Table, BarChart } from 'lucide-react';
+import { PrototypeExample } from '@/components/PrototypeExample';
 
 // Create a context to share the tab state
 export const TabContext = createContext({
@@ -26,7 +27,8 @@ const PrototypePage = () => {
       "lp-profiles": "LP Profiles",
       "deal-analyzer": "Smart Deal Sourcing",
       "matching-engine": "LP Match + Personalized Outreach",
-      "proposal-generator": "Proposal + Pro Forma Generator"
+      "proposal-generator": "Proposal + Pro Forma Generator",
+      "mcp-demo": "MCP Demo"
     };
     return tabLabels[activeTab] || "";
   };
@@ -58,7 +60,7 @@ const PrototypePage = () => {
             className="flex-1 flex flex-col"
           >
             <div className="bg-white p-1 rounded-lg border border-gray-200 mb-6 inline-block">
-              <TabsList className="grid grid-cols-5 relative z-20 bg-transparent">
+              <TabsList className="grid grid-cols-6 relative z-20 bg-transparent">
                 <TabsTrigger 
                   value="dashboard" 
                   data-value="dashboard"
@@ -94,6 +96,13 @@ const PrototypePage = () => {
                 >
                   Proposal + Pro Forma
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="mcp-demo" 
+                  data-value="mcp-demo"
+                  className="data-[state=active]:bg-[#F8F5F0] data-[state=active]:text-[#275E91] hover:text-[#275E91] data-[state=active]:border-0 data-[state=active]:shadow-sm px-4"
+                >
+                  MCP Demo
+                </TabsTrigger>
               </TabsList>
             </div>
             
@@ -115,6 +124,10 @@ const PrototypePage = () => {
 
             <TabsContent value="proposal-generator" className="flex-1">
               <ProposalGenerator />
+            </TabsContent>
+
+            <TabsContent value="mcp-demo" className="flex-1">
+              <PrototypeExample />
             </TabsContent>
           </Tabs>
         </div>
