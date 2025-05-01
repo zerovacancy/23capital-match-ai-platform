@@ -26,6 +26,10 @@ export interface Alert {
     seasonal_factor?: string;
     property_type?: string;
     neighborhood?: string;
+    year_built?: number;
+    square_footage?: number;
+    num_units?: number;
+    lot_size?: number;
     coordinates?: {
       lat: number;
       lng: number;
@@ -139,6 +143,9 @@ const MOCK_ALERTS: Alert[] = [
       opportunity_score: 92,
       property_type: 'Multifamily',
       neighborhood: 'Lincoln Park',
+      year_built: 1985,
+      square_footage: 25000,
+      num_units: 18,
       coordinates: {
         lat: 41.9214,
         lng: -87.6513
@@ -163,6 +170,9 @@ const MOCK_ALERTS: Alert[] = [
       new_price: 2125000,
       property_type: 'Mixed Use',
       neighborhood: 'West Loop',
+      year_built: 2002,
+      square_footage: 18500,
+      num_units: 6,
       coordinates: {
         lat: 41.8855,
         lng: -87.6536
@@ -200,6 +210,9 @@ const MOCK_ALERTS: Alert[] = [
     details: {
       property_type: 'Commercial',
       neighborhood: 'Wicker Park',
+      year_built: 1978,
+      square_footage: 12000,
+      new_price: 3450000,
       coordinates: {
         lat: 41.9087,
         lng: -87.6796
@@ -219,6 +232,57 @@ const MOCK_ALERTS: Alert[] = [
       seasonal_factor: 'Winter Market Slowdown',
       property_type: 'Mixed',
       neighborhood: 'North Side',
+    }
+  },
+  {
+    id: '6',
+    title: 'High Value Office Property',
+    description: 'Premium office building in River North with excellent ROI potential.',
+    type: 'high_opportunity_property',
+    priority: 'high',
+    created_at: new Date(Date.now() - 130000).toISOString(),
+    read: false,
+    dismissed: false,
+    property_id: 'prop234',
+    property_address: '234 River North Plaza, Chicago, IL',
+    property_zip: '60654',
+    details: {
+      opportunity_score: 88,
+      property_type: 'Office',
+      neighborhood: 'River North',
+      year_built: 2010,
+      square_footage: 75000,
+      num_units: 12,
+      new_price: 12500000,
+      coordinates: {
+        lat: 41.8924,
+        lng: -87.6341
+      }
+    }
+  },
+  {
+    id: '7',
+    title: 'Historic Building Opportunity',
+    description: 'Landmark building in Wicker Park with renovation potential.',
+    type: 'high_opportunity_property',
+    priority: 'medium',
+    created_at: new Date(Date.now() - 510000).toISOString(),
+    read: true,
+    dismissed: false,
+    property_id: 'prop456',
+    property_address: '456 Wicker Park Ave, Chicago, IL',
+    property_zip: '60622',
+    details: {
+      opportunity_score: 76,
+      property_type: 'Retail',
+      neighborhood: 'Wicker Park',
+      year_built: 1925,
+      square_footage: 8500,
+      new_price: 980000,
+      coordinates: {
+        lat: 41.9092,
+        lng: -87.6745
+      }
     }
   }
 ];

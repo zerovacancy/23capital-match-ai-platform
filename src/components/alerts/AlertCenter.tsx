@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -60,7 +61,14 @@ export function AlertCenter() {
     isRead: 'all', // 'all', 'read', 'unread'
     priority: 'all', // 'all', 'high', 'medium', 'low'
     type: 'all',
-    search: ''
+    search: '',
+    // Deal statistics filters
+    propertyType: 'all',
+    buildingSize: 'all',
+    buildingAge: 'all',
+    priceRange: 'all',
+    neighborhood: 'all',
+    showDealFilters: true // Controls visibility of deal filters
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,11 +109,53 @@ export function AlertCenter() {
     return apiFilters;
   };
   
-  // Filter alerts client-side (for search functionality)
+  // Filter alerts client-side (for search and deal statistics filters)
   const filteredAlerts = alerts.filter(alert => {
     // Search filter
     if (filter.search && !alert.description.toLowerCase().includes(filter.search.toLowerCase()) &&
-        !(alert.property?.address || '').toLowerCase().includes(filter.search.toLowerCase())) {
+        !(alert.property_address || '').toLowerCase().includes(filter.search.toLowerCase())) {
+      return false;
+    }
+    
+    // Property type filter
+    if (filter.propertyType !== 'all' && 
+        alert.details?.property_type?.toLowerCase() !== filter.propertyType &&
+        !alert.details?.property_type?.toLowerCase().includes(filter.propertyType)) {
+      return false;
+    }
+    
+    // Building size filter
+    if (filter.buildingSize !== 'all' && alert.details?.square_footage) {
+      const sqft = alert.details.square_footage;
+      if (filter.buildingSize === 'small' && sqft >= 10000) return false;
+      if (filter.buildingSize === 'medium' && (sqft < 10000 || sqft > 50000)) return false;
+      if (filter.buildingSize === 'large' && (sqft < 50000 || sqft > 100000)) return false;
+      if (filter.buildingSize === 'xlarge' && sqft < 100000) return false;
+    }
+    
+    // Building age filter
+    if (filter.buildingAge !== 'all' && alert.details?.year_built) {
+      const age = new Date().getFullYear() - alert.details.year_built;
+      if (filter.buildingAge === 'new' && age > 5) return false;
+      if (filter.buildingAge === 'recent' && (age < 5 || age > 20)) return false;
+      if (filter.buildingAge === 'established' && (age < 20 || age > 50)) return false;
+      if (filter.buildingAge === 'historic' && age < 50) return false;
+    }
+    
+    // Price range filter
+    if (filter.priceRange !== 'all') {
+      const price = alert.details?.new_price || alert.details?.previous_price;
+      if (!price) return true; // Skip if no price information
+      
+      if (filter.priceRange === 'under1m' && price >= 1000000) return false;
+      if (filter.priceRange === '1to5m' && (price < 1000000 || price > 5000000)) return false;
+      if (filter.priceRange === '5to10m' && (price < 5000000 || price > 10000000)) return false;
+      if (filter.priceRange === 'over10m' && price < 10000000) return false;
+    }
+    
+    // Neighborhood filter
+    if (filter.neighborhood !== 'all' && 
+        !alert.details?.neighborhood?.toLowerCase().includes(filter.neighborhood.replace(/([A-Z])/g, ' $1').trim().toLowerCase())) {
       return false;
     }
     
@@ -271,19 +321,136 @@ export function AlertCenter() {
         
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="w-full max-w-md mx-auto grid grid-cols-3 mb-4">
-            <TabsTrigger value="all" onClick={() => setFilter(prev => ({...prev, type: 'all'}))}>
+            <TabsTrigger 
+              value="all" 
+              onClick={() => setFilter((prev) => ({...prev, type: 'all', showDealFilters: true}))}
+            >
               <List className="h-4 w-4 mr-1" />
               All
             </TabsTrigger>
-            <TabsTrigger value="properties" onClick={() => setFilter(prev => ({...prev, type: 'all'}))}>
+            <TabsTrigger 
+              value="properties" 
+              onClick={() => setFilter((prev) => ({...prev, type: 'all', showDealFilters: true}))}
+            >
               <Building className="h-4 w-4 mr-1" />
               Properties
             </TabsTrigger>
-            <TabsTrigger value="market" onClick={() => setFilter(prev => ({...prev, type: 'all'}))}>
+            <TabsTrigger 
+              value="market" 
+              onClick={() => setFilter((prev) => ({...prev, type: 'market', showDealFilters: false}))}
+            >
               <TrendingUp className="h-4 w-4 mr-1" />
               Market
             </TabsTrigger>
           </TabsList>
+          
+          {/* Deal Statistics Filters - Show only when not on market tab */}
+          {filter.showDealFilters && (
+            <div className="flex flex-wrap items-center gap-2 mb-4 bg-muted/20 p-3 rounded-md">
+            <div className="flex items-center mr-2">
+              <Building className="h-4 w-4 mr-1 text-muted-foreground" />
+              <span className="text-sm font-medium">Deal Filters:</span>
+            </div>
+            
+            <Select 
+              value={filter.propertyType}
+              onValueChange={(value) => setFilter(prev => ({...prev, propertyType: value}))}
+            >
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue placeholder="Property Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="multifamily">Multifamily</SelectItem>
+                <SelectItem value="commercial">Commercial</SelectItem>
+                <SelectItem value="mixed use">Mixed Use</SelectItem>
+                <SelectItem value="retail">Retail</SelectItem>
+                <SelectItem value="office">Office</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select 
+              value={filter.buildingSize}
+              onValueChange={(value) => setFilter(prev => ({...prev, buildingSize: value}))}
+            >
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue placeholder="Building Size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sizes</SelectItem>
+                <SelectItem value="small">Under 10k sqft</SelectItem>
+                <SelectItem value="medium">10k-50k sqft</SelectItem>
+                <SelectItem value="large">50k-100k sqft</SelectItem>
+                <SelectItem value="xlarge">Over 100k sqft</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select 
+              value={filter.buildingAge}
+              onValueChange={(value) => setFilter(prev => ({...prev, buildingAge: value}))}
+            >
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue placeholder="Building Age" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Ages</SelectItem>
+                <SelectItem value="new">New (0-5 yrs)</SelectItem>
+                <SelectItem value="recent">Recent (5-20 yrs)</SelectItem>
+                <SelectItem value="established">Established (20-50 yrs)</SelectItem>
+                <SelectItem value="historic">Historic (50+ yrs)</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select 
+              value={filter.priceRange}
+              onValueChange={(value) => setFilter(prev => ({...prev, priceRange: value}))}
+            >
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue placeholder="Price Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Prices</SelectItem>
+                <SelectItem value="under1m">Under $1M</SelectItem>
+                <SelectItem value="1to5m">$1M - $5M</SelectItem>
+                <SelectItem value="5to10m">$5M - $10M</SelectItem>
+                <SelectItem value="over10m">Over $10M</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select 
+              value={filter.neighborhood}
+              onValueChange={(value) => setFilter(prev => ({...prev, neighborhood: value}))}
+            >
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue placeholder="Neighborhood" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Areas</SelectItem>
+                <SelectItem value="lincolnpark">Lincoln Park</SelectItem>
+                <SelectItem value="westloop">West Loop</SelectItem>
+                <SelectItem value="wickerpark">Wicker Park</SelectItem>
+                <SelectItem value="rivernorth">River North</SelectItem>
+                <SelectItem value="loganquare">Logan Square</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 text-xs"
+              onClick={() => setFilter(prev => ({
+                ...prev,
+                propertyType: 'all',
+                buildingSize: 'all',
+                buildingAge: 'all',
+                priceRange: 'all',
+                neighborhood: 'all'
+              }))}
+            >
+              Reset Filters
+            </Button>
+          </div>
+          )}
           
           <TabsContent value="all" className="mt-0">
             {loading ? (

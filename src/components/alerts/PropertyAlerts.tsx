@@ -20,7 +20,11 @@ import {
   CalendarRange,
   Map,
   BarChart3,
-  Clock
+  Clock,
+  X,
+  ArrowDownAZ,
+  ArrowUpAZ,
+  ArrowUpDown
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -71,13 +75,33 @@ const PropertyAlertCard = ({ alert, onClick }: { alert: Alert, onClick: (alert: 
             
             <p className="text-xs text-gray-500 mb-1">{alert.details?.neighborhood || 'Unknown Neighborhood'}</p>
             
-            <div className="flex justify-between items-center mt-2">
+            <div className="flex flex-wrap justify-between items-center mt-2 gap-2">
               <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200">
                 {getIconForType(alert.type)}
                 <span className="ml-1">{getTypeName(alert.type)}</span>
               </Badge>
               
-              <span className="text-xs text-gray-400">
+              <div className="flex flex-wrap gap-1">
+                {alert.details?.square_footage && (
+                  <Badge variant="outline" className="text-xs bg-gray-50">
+                    {(alert.details.square_footage / 1000).toFixed(1)}K sqft
+                  </Badge>
+                )}
+                
+                {alert.details?.year_built && (
+                  <Badge variant="outline" className="text-xs bg-gray-50">
+                    Built {alert.details.year_built}
+                  </Badge>
+                )}
+                
+                {alert.details?.opportunity_score && (
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                    Score: {alert.details.opportunity_score}
+                  </Badge>
+                )}
+              </div>
+              
+              <span className="text-xs text-gray-400 w-full text-right mt-1">
                 {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
               </span>
             </div>
@@ -130,33 +154,84 @@ export const PropertyAlertDetail = ({ alert, onBack }: { alert: Alert, onBack: (
       <div className="border rounded-lg p-4">
         <h4 className="font-medium mb-3">Why This Alert?</h4>
         
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {alert.type === 'high_opportunity_property' && (
-            <>
-              <div className="border rounded p-3">
-                <p className="text-xs text-gray-500">Opportunity Score</p>
-                <p className="text-lg font-bold">{alert.details?.opportunity_score || 'N/A'}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+          {/* Common metrics for all property types */}
+          <div className="border rounded p-3">
+            <p className="text-xs text-gray-500">Property Type</p>
+            <p className="text-lg font-bold">{alert.details?.property_type || 'N/A'}</p>
+          </div>
+          
+          {alert.details?.square_footage && (
+            <div className="border rounded p-3">
+              <p className="text-xs text-gray-500">Building Size</p>
+              <p className="text-lg font-bold">{new Intl.NumberFormat().format(alert.details.square_footage)} sqft</p>
+            </div>
+          )}
+          
+          {alert.details?.year_built && (
+            <div className="border rounded p-3">
+              <p className="text-xs text-gray-500">Year Built</p>
+              <p className="text-lg font-bold">{alert.details.year_built}</p>
+              <p className="text-xs text-gray-500">({new Date().getFullYear() - alert.details.year_built} years old)</p>
+            </div>
+          )}
+          
+          {alert.details?.num_units && (
+            <div className="border rounded p-3">
+              <p className="text-xs text-gray-500">Number of Units</p>
+              <p className="text-lg font-bold">{alert.details.num_units}</p>
+            </div>
+          )}
+          
+          {/* Alert-specific metrics */}
+          {alert.type === 'high_opportunity_property' && alert.details?.opportunity_score && (
+            <div className="border rounded p-3 col-span-2">
+              <p className="text-xs text-gray-500">Opportunity Score</p>
+              <p className="text-lg font-bold">{alert.details.opportunity_score}/100</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                <div 
+                  className="bg-green-500 h-2 rounded-full" 
+                  style={{ width: `${alert.details.opportunity_score}%` }}
+                ></div>
               </div>
-              
-              <div className="border rounded p-3">
-                <p className="text-xs text-gray-500">Property Type</p>
-                <p className="text-lg font-bold">{alert.details?.property_type || 'N/A'}</p>
-              </div>
-            </>
+            </div>
           )}
           
           {alert.type === 'price_change' && (
             <>
               <div className="border rounded p-3">
                 <p className="text-xs text-gray-500">Price Change</p>
-                <p className="text-lg font-bold">{alert.details?.price_change_percentage || 0}%</p>
+                <p className={`text-lg font-bold ${alert.details?.price_change_percentage && alert.details.price_change_percentage < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {alert.details?.price_change_percentage || 0}%
+                </p>
               </div>
               
               <div className="border rounded p-3">
                 <p className="text-xs text-gray-500">New Price</p>
                 <p className="text-lg font-bold">${new Intl.NumberFormat().format(alert.details?.new_price || 0)}</p>
               </div>
+              
+              {alert.details?.previous_price && (
+                <div className="border rounded p-3">
+                  <p className="text-xs text-gray-500">Previous Price</p>
+                  <p className="text-lg font-bold line-through text-gray-500">
+                    ${new Intl.NumberFormat().format(alert.details.previous_price)}
+                  </p>
+                </div>
+              )}
             </>
+          )}
+          
+          {alert.type === 'new_listing' && alert.details?.new_price && (
+            <div className="border rounded p-3 col-span-2">
+              <p className="text-xs text-gray-500">Listing Price</p>
+              <p className="text-lg font-bold">${new Intl.NumberFormat().format(alert.details.new_price)}</p>
+              {alert.details?.square_footage && (
+                <p className="text-xs text-gray-500">
+                  ${Math.round(alert.details.new_price / alert.details.square_footage)}/sqft
+                </p>
+              )}
+            </div>
           )}
         </div>
         
@@ -210,6 +285,8 @@ export function PropertyAlerts({ selectedAlert, setSelectedAlert }: {
     timeframe: 'all'
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Filter only property-related alerts
   useEffect(() => {
@@ -246,8 +323,39 @@ export function PropertyAlerts({ selectedAlert, setSelectedAlert }: {
       );
     }
     
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      // Extract values based on sort criteria
+      switch(sortBy) {
+        case 'price':
+          aValue = a.details?.new_price || a.details?.previous_price || 0;
+          bValue = b.details?.new_price || b.details?.previous_price || 0;
+          break;
+        case 'size':
+          aValue = a.details?.square_footage || 0;
+          bValue = b.details?.square_footage || 0;
+          break;
+        case 'age':
+          aValue = a.details?.year_built ? new Date().getFullYear() - a.details.year_built : 0;
+          bValue = b.details?.year_built ? new Date().getFullYear() - b.details.year_built : 0;
+          break;
+        case 'opportunity':
+          aValue = a.details?.opportunity_score || 0;
+          bValue = b.details?.opportunity_score || 0;
+          break;
+        default: // createdAt
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+      }
+      
+      // Apply sort order
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+    
     setFilteredAlerts(filtered);
-  }, [alerts, filter, searchTerm]);
+  }, [alerts, filter, searchTerm, sortBy, sortOrder]);
   
   // Load alerts on mount
   useEffect(() => {
@@ -325,7 +433,7 @@ export function PropertyAlerts({ selectedAlert, setSelectedAlert }: {
       </div>
       
       {/* Additional Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <div>
           <Select 
             value={filter.neighborhood} 
@@ -362,7 +470,38 @@ export function PropertyAlerts({ selectedAlert, setSelectedAlert }: {
           </Select>
         </div>
         
-        <div className="flex justify-end">
+        <div>
+          <Select 
+            value={sortBy} 
+            onValueChange={setSortBy}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt">Date Added</SelectItem>
+              <SelectItem value="price">Purchase Price</SelectItem>
+              <SelectItem value="size">Building Size</SelectItem>
+              <SelectItem value="age">Building Age</SelectItem>
+              <SelectItem value="opportunity">Opportunity Score</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-10 w-10"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? (
+              <ArrowUpAZ className="h-4 w-4" />
+            ) : (
+              <ArrowDownAZ className="h-4 w-4" />
+            )}
+          </Button>
+          
           <Button variant="outline" size="icon" className="h-10 w-10">
             <Filter className="h-4 w-4" />
           </Button>
