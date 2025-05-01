@@ -13,6 +13,7 @@ import TestPage from "./pages/TestPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ApiDocs from "./pages/ApiDocs";
 import SwaggerDocs from "./pages/SwaggerDocs";
+import AlertsPage from "./pages/AlertsPage";
 import Analytics from "@/lib/analytics";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/api-docs" element={<ApiDocs />} />
           <Route path="/docs" element={<SwaggerDocs />} />
+          <Route path="/alerts" element={<AlertsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
