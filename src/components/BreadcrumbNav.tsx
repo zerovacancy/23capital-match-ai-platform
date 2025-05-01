@@ -68,7 +68,7 @@ const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({ extraItems = [] }) => {
             const isLast = index === extraItems.length - 1;
             
             return (
-              <React.Fragment key={item.label}>
+              <React.Fragment key={`extra-${index}`}>
                 {isLast ? (
                   <BreadcrumbItem>
                     <BreadcrumbPage>{item.label}</BreadcrumbPage>

@@ -744,6 +744,16 @@
   to { width: 100%; } 
 }
 
+@keyframes path-animation {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-path {
+  animation: path-animation 1.5s ease-in-out forwards;
+}
+
 @keyframes pulse { 
   0% { opacity: 0.6; } 
   50% { opacity: 1; } 
