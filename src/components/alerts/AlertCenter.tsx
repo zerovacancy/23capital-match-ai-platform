@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAlerts } from '@/context/AlertsContext';
 import { AlertDetail } from './AlertDetail';
 import { AlertPreferences } from './AlertPreferences';
+import { PropertyAlerts } from './PropertyAlerts';
+import { MarketAlerts } from './MarketAlerts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -39,7 +41,7 @@ import {
   Filter
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Alert, AlertFilters } from '@/context/AlertsContext';
+import { Alert } from '@/context/AlertsContext';
 
 export function AlertCenter() {
   const { 
@@ -76,7 +78,7 @@ export function AlertCenter() {
   // Handle refresh
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchAlerts(currentPage, 20, getApiFilters());
+    await fetchAlerts(getApiFilters());
     setTimeout(() => setRefreshing(false), 500); // Minimum animation time
   };
 
@@ -85,15 +87,15 @@ export function AlertCenter() {
     const apiFilters: any = {};
     
     if (filter.isRead !== 'all') {
-      apiFilters.isRead = filter.isRead === 'read';
+      apiFilters.read = filter.isRead === 'read';
     }
     
     if (filter.priority !== 'all') {
-      apiFilters.priority = filter.priority;
+      apiFilters.priority = [filter.priority];
     }
     
     if (filter.type !== 'all') {
-      apiFilters.type = filter.type;
+      apiFilters.type = [filter.type];
     }
     
     return apiFilters;
@@ -124,7 +126,7 @@ export function AlertCenter() {
   
   // Apply filters when changed
   useEffect(() => {
-    fetchAlerts(currentPage, 20, getApiFilters());
+    fetchAlerts(getApiFilters());
   }, [filter.isRead, filter.priority, filter.type, currentPage, fetchAlerts]);
   
   // Handle search input changes
@@ -140,7 +142,25 @@ export function AlertCenter() {
   }
   
   if (selectedAlert) {
-    return <AlertDetail alert={selectedAlert} onBack={handleCloseDetail} />;
+    // Direct to the appropriate detail view based on alert type
+    if (['high_opportunity_property', 'price_change', 'new_listing'].includes(selectedAlert.type)) {
+      return (
+        <PropertyAlerts 
+          selectedAlert={selectedAlert} 
+          setSelectedAlert={setSelectedAlert} 
+        />
+      );
+    } else if (['market_trend', 'seasonal_opportunity'].includes(selectedAlert.type)) {
+      return (
+        <MarketAlerts 
+          selectedAlert={selectedAlert} 
+          setSelectedAlert={setSelectedAlert} 
+        />
+      );
+    } else {
+      // Fallback to the generic alert detail for other types
+      return <AlertDetail alert={selectedAlert} onBack={handleCloseDetail} />;
+    }
   }
 
   return (
@@ -255,12 +275,12 @@ export function AlertCenter() {
               <List className="h-4 w-4 mr-1" />
               All
             </TabsTrigger>
-            <TabsTrigger value="properties" onClick={() => setFilter(prev => ({...prev, type: 'high_opportunity_property'}))}>
-              <AlertCircle className="h-4 w-4 mr-1" />
+            <TabsTrigger value="properties" onClick={() => setFilter(prev => ({...prev, type: 'all'}))}>
+              <Building className="h-4 w-4 mr-1" />
               Properties
             </TabsTrigger>
-            <TabsTrigger value="market" onClick={() => setFilter(prev => ({...prev, type: 'market_trend'}))}>
-              <Calendar className="h-4 w-4 mr-1" />
+            <TabsTrigger value="market" onClick={() => setFilter(prev => ({...prev, type: 'all'}))}>
+              <TrendingUp className="h-4 w-4 mr-1" />
               Market
             </TabsTrigger>
           </TabsList>
@@ -294,7 +314,7 @@ export function AlertCenter() {
                           </h4>
                           <Badge 
                             variant="outline" 
-                            className={`text-xs ${
+                            className={`text-xs inline-flex items-center ${
                               alert.priority === 'high' ? 'bg-red-100 text-red-800 border-red-200' : 
                               alert.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
                               'bg-green-100 text-green-800 border-green-200'
@@ -338,13 +358,17 @@ export function AlertCenter() {
           </TabsContent>
           
           <TabsContent value="properties" className="mt-0">
-            {/* Property alerts content */}
-            {/* This is handled by the filter change on tab click */}
+            <PropertyAlerts 
+              selectedAlert={selectedAlert} 
+              setSelectedAlert={setSelectedAlert} 
+            />
           </TabsContent>
           
           <TabsContent value="market" className="mt-0">
-            {/* Market alerts content */}
-            {/* This is handled by the filter change on tab click */}
+            <MarketAlerts 
+              selectedAlert={selectedAlert} 
+              setSelectedAlert={setSelectedAlert} 
+            />
           </TabsContent>
         </Tabs>
         

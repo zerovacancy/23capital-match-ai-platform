@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useLocation, Link } from "react-router-dom";
 import {
   Building,
   DollarSign,
@@ -28,12 +29,15 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
   active,
   badge,
 }) => {
+  const location = useLocation();
+  const isActive = active || location.pathname === href;
+
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-        active
+        isActive
           ? "bg-primary text-primary-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
@@ -45,11 +49,12 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
           {badge}
         </span>
       )}
-    </a>
+    </Link>
   );
 };
 
 export function SimpleSidebar() {
+  const location = useLocation();
   return (
     <div className="h-full bg-card border-r p-4 w-60">
       <div className="mb-8">
@@ -59,7 +64,7 @@ export function SimpleSidebar() {
       
       <div className="space-y-1">
         <SidebarLink
-          href="/"
+          href="/dashboard"
           icon={<PieChart className="h-5 w-5" />}
           label="Dashboard"
         />
@@ -89,7 +94,7 @@ export function SimpleSidebar() {
           icon={<Bell className="h-5 w-5" />}
           label="Alerts"
           badge={5}
-          active={true}
+          active={location.pathname.includes('/alerts')}
         />
         <SidebarLink
           href="/messages"

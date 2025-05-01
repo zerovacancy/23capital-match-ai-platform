@@ -72,7 +72,7 @@ export function AlertDetail({ alert, onBack }: AlertDetailProps) {
     // In a real app, navigate to property details page
     setTimeout(() => {
       setLoading(false);
-      alert(`Navigating to property details for ${alert.property?.address || 'this property'}`);
+      alert(`Navigating to property details for ${alert.property_address || 'this property'}`);
     }, 1000);
   };
   
@@ -90,19 +90,19 @@ export function AlertDetail({ alert, onBack }: AlertDetailProps) {
         </Button>
         <h2 className="text-xl font-semibold flex items-center">
           {getAlertIcon()}
-          <span className="ml-2">{alert.typeDisplay}</span>
+          <span className="ml-2">{alert.title}</span>
         </h2>
       </div>
       
       <Card className="mb-6">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle>{alert.typeDisplay}</CardTitle>
+            <CardTitle>{alert.title}</CardTitle>
             <div className="flex items-center gap-2">
               <Badge className={getPriorityColor(alert.priority)}>
                 {alert.priority}
               </Badge>
-              {alert.isRead && (
+              {alert.read && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   <CheckCircle className="h-3 w-3" />
                   Read
@@ -111,14 +111,14 @@ export function AlertDetail({ alert, onBack }: AlertDetailProps) {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            {formatDate(alert.createdAt)}
+            {formatDate(alert.created_at)}
           </p>
         </CardHeader>
         
         <CardContent>
           <p className="text-base mb-4">{alert.description}</p>
           
-          {alert.property && (
+          {alert.property_address && (
             <div className="mt-4">
               <h3 className="text-lg font-medium mb-2 flex items-center">
                 <Building className="h-4 w-4 mr-2" />
@@ -126,15 +126,15 @@ export function AlertDetail({ alert, onBack }: AlertDetailProps) {
               </h3>
               
               <div className="bg-muted p-4 rounded-md mb-4">
-                <h4 className="font-medium">{alert.property.address}</h4>
+                <h4 className="font-medium">{alert.property_address}</h4>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div>
                     <span className="text-sm text-muted-foreground">Type</span>
-                    <p>{alert.property.type}</p>
+                    <p>{alert.details?.property_type || 'Unknown'}</p>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Neighborhood</span>
-                    <p>{alert.property.neighborhood}</p>
+                    <p>{alert.details?.neighborhood || 'Unknown'}</p>
                   </div>
                 </div>
               </div>
@@ -165,112 +165,94 @@ export function AlertDetail({ alert, onBack }: AlertDetailProps) {
           <div>
             <h3 className="text-lg font-medium mb-4">Alert Details</h3>
             
-            {alert.type === 'high_opportunity_property' && alert.data && (
+            {alert.type === 'high_opportunity_property' && alert.details && (
               <div className="grid grid-cols-2 gap-4">
-                {alert.data.investment_opportunity_score && (
+                {alert.details.opportunity_score && (
                   <div>
-                    <span className="text-sm text-muted-foreground">Investment Score</span>
+                    <span className="text-sm text-muted-foreground">Opportunity Score</span>
                     <p className="flex items-center">
                       <Star className="h-4 w-4 text-amber-500 mr-1" />
-                      {alert.data.investment_opportunity_score}
+                      {alert.details.opportunity_score}
                     </p>
                   </div>
                 )}
                 
-                {alert.data.acquisition_potential_score && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Acquisition Potential</span>
-                    <p>{alert.data.acquisition_potential_score}</p>
-                  </div>
-                )}
+                {/* Display other details if available */}
+                <div>
+                  <span className="text-sm text-muted-foreground">Property Type</span>
+                  <p>{alert.details.property_type || 'Unknown'}</p>
+                </div>
                 
-                {alert.data.renovation_potential_score && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Renovation Potential</span>
-                    <p>{alert.data.renovation_potential_score}</p>
-                  </div>
-                )}
-                
-                {alert.data.neighborhood_growth_score && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Neighborhood Growth</span>
-                    <p>{alert.data.neighborhood_growth_score}</p>
-                  </div>
-                )}
-                
-                {alert.data.price_analysis_score && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Price Analysis</span>
-                    <p>{alert.data.price_analysis_score}</p>
-                  </div>
-                )}
+                <div>
+                  <span className="text-sm text-muted-foreground">Neighborhood</span>
+                  <p>{alert.details.neighborhood || 'Unknown'}</p>
+                </div>
               </div>
             )}
             
-            {alert.type === 'price_change' && alert.data && (
+            {alert.type === 'price_change' && alert.details && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-muted-foreground">Previous Price</span>
-                    <p className="font-medium">${alert.data.old_price?.toLocaleString()}</p>
+                    <p className="font-medium">${alert.details.previous_price?.toLocaleString() || 'N/A'}</p>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">New Price</span>
-                    <p className="font-medium">${alert.data.new_price?.toLocaleString()}</p>
+                    <p className="font-medium">${alert.details.new_price?.toLocaleString() || 'N/A'}</p>
                   </div>
                 </div>
                 
                 <div>
                   <span className="text-sm text-muted-foreground">Price Change</span>
-                  <p className={alert.data.price_change_pct < 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                    {alert.data.price_change_pct > 0 ? '+' : ''}{alert.data.price_change_pct?.toFixed(1)}%
-                    ({alert.data.price_change > 0 ? '+' : ''}${alert.data.price_change?.toLocaleString()})
+                  <p className={alert.details.price_change_percentage && alert.details.price_change_percentage < 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                    {alert.details.price_change_percentage && alert.details.price_change_percentage > 0 ? '+' : ''}
+                    {alert.details.price_change_percentage ? `${alert.details.price_change_percentage.toFixed(1)}%` : 'N/A'}
                   </p>
                 </div>
                 
-                {alert.data.change_date && (
+                {alert.created_at && (
                   <div>
                     <span className="text-sm text-muted-foreground">Change Date</span>
-                    <p>{formatDate(alert.data.change_date)}</p>
+                    <p>{formatDate(alert.created_at)}</p>
                   </div>
                 )}
               </div>
             )}
             
-            {alert.type === 'market_trend' && alert.data && (
+            {alert.type === 'market_trend' && alert.details && (
               <div className="space-y-4">
                 <div>
                   <span className="text-sm text-muted-foreground">Market Direction</span>
-                  <p className="font-medium">{alert.data.market_direction}</p>
+                  <p className="font-medium">{alert.details.market_trend_direction === 'up' ? 'Upward' : 'Downward'}</p>
                 </div>
                 
                 <div>
-                  <span className="text-sm text-muted-foreground">Summary</span>
-                  <p>{alert.data.market_conditions?.join(', ')}</p>
+                  <span className="text-sm text-muted-foreground">Time Period</span>
+                  <p>{alert.details.market_trend_period || 'Recent period'}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-sm text-muted-foreground">Price Change</span>
-                    <p className={alert.data.price_change_pct < 0 ? "text-green-600" : "text-red-600"}>
-                      {alert.data.price_change_pct > 0 ? '+' : ''}{alert.data.price_change_pct?.toFixed(1)}%
+                    <span className="text-sm text-muted-foreground">Percentage Change</span>
+                    <p className={alert.details.market_trend_percentage && alert.details.market_trend_percentage < 0 ? "text-green-600" : "text-red-600"}>
+                      {alert.details.market_trend_percentage && alert.details.market_trend_percentage > 0 ? '+' : ''}
+                      {alert.details.market_trend_percentage ? `${alert.details.market_trend_percentage.toFixed(1)}%` : 'N/A'}
                     </p>
                   </div>
                   
                   <div>
-                    <span className="text-sm text-muted-foreground">Volume Change</span>
-                    <p className={alert.data.volume_change_pct > 0 ? "text-green-600" : "text-red-600"}>
-                      {alert.data.volume_change_pct > 0 ? '+' : ''}{alert.data.volume_change_pct?.toFixed(1)}%
-                    </p>
+                    <span className="text-sm text-muted-foreground">Property Type</span>
+                    <p>{alert.details.property_type || 'All types'}</p>
                   </div>
                 </div>
               </div>
             )}
             
             {/* Default data display for any other alert types */}
-            {!['high_opportunity_property', 'price_change', 'market_trend'].includes(alert.type) && (
+            {!['high_opportunity_property', 'price_change', 'market_trend'].includes(alert.type) && alert.details && (
               <div className="space-y-2">
-                {Object.entries(alert.data || {}).map(([key, value]) => {
+                {Object.entries(alert.details).map(([key, value]) => {
                   // Skip null/undefined values and complex objects
                   if (value === null || value === undefined || typeof value === 'object') {
                     return null;

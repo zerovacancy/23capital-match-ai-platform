@@ -14,6 +14,14 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ApiDocs from "./pages/ApiDocs";
 import SwaggerDocs from "./pages/SwaggerDocs";
 import AlertsPage from "./pages/AlertsPage";
+import DashboardPage from "./pages/DashboardPage";
+import InvestorsPage from "./pages/InvestorsPage";
+import PropertiesPage from "./pages/PropertiesPage";
+import DealsPage from "./pages/DealsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import MessagesPage from "./pages/MessagesPage";
+import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
 import Analytics from "@/lib/analytics";
 
 const queryClient = new QueryClient();
@@ -62,6 +70,14 @@ const App = () => (
           <Route path="/api-docs" element={<ApiDocs />} />
           <Route path="/docs" element={<SwaggerDocs />} />
           <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/investors" element={<InvestorsPage />} />
+          <Route path="/properties" element={<PropertiesPage />} />
+          <Route path="/deals" element={<DealsPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/help" element={<HelpPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
