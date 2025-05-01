@@ -549,7 +549,7 @@ export function UnifiedDashboard() {
                     Opportunity Score
                   </h4>
                   <div className="text-2xl font-bold mt-2 mb-1">3 Properties</div>
-                  <p className="text-xs text-gray-500">With opportunity score > 90 in target areas</p>
+                  <p className="text-xs text-gray-500">With opportunity score &gt; 90 in target areas</p>
                 </div>
               </div>
               
