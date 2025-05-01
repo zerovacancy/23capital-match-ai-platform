@@ -1,0 +1,134 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Capital Match Alert System API",
+    "description": "API to run the alert system for the Cook County Property Acquisition Tracking System",
+    "version": "1.0.0",
+    "contact": {
+      "name": "LG Development",
+      "url": "https://lgdevelopment.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{your-domain}/api",
+      "description": "Production server",
+      "variables": {
+        "your-domain": {
+          "default": "lgdevelopment.ai"
+        }
+      }
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/alerts/run": {
+      "post": {
+        "summary": "Run alert system",
+        "description": "Run the alert system with specified command-line arguments.\nThis endpoint allows triggering different parts of the alert system:\n- Generate property acquisition alerts\n- Schedule reports\n- Generate reports\n- Send notifications\n",
+        "operationId": "runAlertSystem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertSystemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alert system executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertSystemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlertSystemRequest": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "description": "Command-line arguments to pass to the alert system",
+            "items": {
+              "type": "string"
+            },
+            "example": ["--generate-alerts", "--time-period", "7", "--batch-size", "50"]
+          }
+        },
+        "required": [
+          "args"
+        ]
+      },
+      "AlertSystemResponse": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "description": "Standard output from the alert system execution"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Alerts",
+      "description": "Alert system operations"
+    }
+  ]
+}
