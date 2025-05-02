@@ -14,6 +14,13 @@ export interface Alert {
   property_address?: string;
   property_zip?: string;
   url?: string;
+  // Relationships data
+  relationships?: {
+    brokers?: { name: string; company?: string; role?: string }[];
+    ownerReps?: { name: string; company?: string; role?: string }[];
+    equityGroups?: { name: string; type?: string; role?: string }[];
+    lenders?: { name: string; type?: string }[];
+  };
   // Type-specific data
   details?: {
     opportunity_score?: number;
@@ -139,6 +146,17 @@ const MOCK_ALERTS: Alert[] = [
     property_id: 'prop123',
     property_address: '123 Lincoln Park Way, Chicago, IL',
     property_zip: '60614',
+    relationships: {
+      brokers: [
+        { name: "Chuck Johanns", company: "Newmark", role: "seller's broker" }
+      ],
+      equityGroups: [
+        { name: "AEW Capital Management", type: "private equity", role: "buyer" }
+      ],
+      lenders: [
+        { name: "Wintrust Bank", type: "commercial" }
+      ]
+    },
     details: {
       opportunity_score: 92,
       property_type: 'Multifamily',
@@ -164,6 +182,15 @@ const MOCK_ALERTS: Alert[] = [
     property_id: 'prop456',
     property_address: '456 West Loop Ave, Chicago, IL',
     property_zip: '60607',
+    relationships: {
+      brokers: [
+        { name: "Liz Gagliardi", company: "Newmark", role: "seller's broker" },
+        { name: "Jeff Robbins", company: "Walker & Dunlop", role: "buyer's broker" }
+      ],
+      equityGroups: [
+        { name: "MZ Capital Partners", type: "private equity", role: "equity partner" }
+      ]
+    },
     details: {
       price_change_percentage: -15,
       previous_price: 2500000,
@@ -207,6 +234,14 @@ const MOCK_ALERTS: Alert[] = [
     property_id: 'prop789',
     property_address: '789 Wicker Park Blvd, Chicago, IL',
     property_zip: '60622',
+    relationships: {
+      brokers: [
+        { name: "Susan Lawson", company: "Newmark", role: "listing broker" }
+      ],
+      lenders: [
+        { name: "U.S. Department of Housing and Urban Development (HUD)", type: "government" }
+      ]
+    },
     details: {
       property_type: 'Commercial',
       neighborhood: 'Wicker Park',
@@ -246,6 +281,20 @@ const MOCK_ALERTS: Alert[] = [
     property_id: 'prop234',
     property_address: '234 River North Plaza, Chicago, IL',
     property_zip: '60654',
+    relationships: {
+      brokers: [
+        { name: "Matt Ewig", company: "Walker & Dunlop", role: "seller's broker" },
+        { name: "Chris Rumul", company: "Walker & Dunlop", role: "buyer's broker" }
+      ],
+      equityGroups: [
+        { name: "JRG Capital Partners", type: "investment firm", role: "buyer" },
+        { name: "AEW Capital Management", type: "private equity", role: "investor" }
+      ],
+      lenders: [
+        { name: "Wintrust Bank", type: "commercial" },
+        { name: "U.S. Department of Housing and Urban Development (HUD)", type: "government" }
+      ]
+    },
     details: {
       opportunity_score: 88,
       property_type: 'Office',

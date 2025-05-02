@@ -39,7 +39,10 @@ import {
   Eye,
   List,
   Check,
-  Filter
+  Filter,
+  Users,
+  Briefcase,
+  CreditCard
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Alert } from '@/context/AlertsContext';
@@ -491,9 +494,42 @@ export function AlertCenter() {
                           </Badge>
                         </div>
                         
-                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                        <p className="text-xs text-gray-500 line-clamp-2 mb-1">
                           {alert.description}
                         </p>
+                        
+                        {/* Relationships section */}
+                        {alert.relationships && (
+                          <div className="flex flex-wrap gap-1 mb-1">
+                            {alert.relationships.brokers?.map((broker, idx) => (
+                              <Badge key={`broker-${idx}`} variant="outline" className="text-xs px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                                <Users className="h-2.5 w-2.5 mr-1" />
+                                {broker.name}
+                              </Badge>
+                            ))}
+                            
+                            {alert.relationships.ownerReps?.map((rep, idx) => (
+                              <Badge key={`rep-${idx}`} variant="outline" className="text-xs px-1.5 py-0 bg-indigo-50 text-indigo-700 border-indigo-200">
+                                <Users className="h-2.5 w-2.5 mr-1" />
+                                {rep.name}
+                              </Badge>
+                            ))}
+                            
+                            {alert.relationships.equityGroups?.map((group, idx) => (
+                              <Badge key={`equity-${idx}`} variant="outline" className="text-xs px-1.5 py-0 bg-violet-50 text-violet-700 border-violet-200">
+                                <Briefcase className="h-2.5 w-2.5 mr-1" />
+                                {group.name}
+                              </Badge>
+                            ))}
+                            
+                            {alert.relationships.lenders?.map((lender, idx) => (
+                              <Badge key={`lender-${idx}`} variant="outline" className="text-xs px-1.5 py-0 bg-green-50 text-green-700 border-green-200">
+                                <CreditCard className="h-2.5 w-2.5 mr-1" />
+                                {lender.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                         
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-400">

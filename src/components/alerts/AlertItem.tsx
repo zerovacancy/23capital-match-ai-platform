@@ -2,7 +2,7 @@ import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Alert as AlertType } from '@/context/AlertsContext';
 import { useAlerts } from '@/context/AlertsContext';
-import { AlertCircle, Building, TrendingUp, DollarSign, Home, Map, Calendar } from 'lucide-react';
+import { AlertCircle, Building, TrendingUp, DollarSign, Home, Map, Calendar, Users, Briefcase, CreditCard } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,6 +95,65 @@ export function AlertItem({ alert, onSelect }: AlertItemProps) {
       
       <CardContent className="p-4 pt-2 pb-2">
         <p className="text-sm">{alert.description}</p>
+        
+        {/* Display relationships if available */}
+        {alert.relationships && (
+          <div className="mt-2">
+            <div className="flex flex-wrap gap-2 items-center text-xs">
+              {alert.relationships.brokers && alert.relationships.brokers.length > 0 && (
+                <div className="flex items-center">
+                  <Users className="h-3 w-3 mr-1 text-blue-500" />
+                  <div className="flex flex-wrap gap-1">
+                    {alert.relationships.brokers.map((broker, idx) => (
+                      <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs px-1.5 py-0">
+                        {broker.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {alert.relationships.ownerReps && alert.relationships.ownerReps.length > 0 && (
+                <div className="flex items-center">
+                  <Users className="h-3 w-3 mr-1 text-indigo-500" />
+                  <div className="flex flex-wrap gap-1">
+                    {alert.relationships.ownerReps.map((rep, idx) => (
+                      <Badge key={idx} variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 text-xs px-1.5 py-0">
+                        {rep.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {alert.relationships.equityGroups && alert.relationships.equityGroups.length > 0 && (
+                <div className="flex items-center">
+                  <Briefcase className="h-3 w-3 mr-1 text-violet-500" />
+                  <div className="flex flex-wrap gap-1">
+                    {alert.relationships.equityGroups.map((group, idx) => (
+                      <Badge key={idx} variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 text-xs px-1.5 py-0">
+                        {group.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {alert.relationships.lenders && alert.relationships.lenders.length > 0 && (
+                <div className="flex items-center">
+                  <CreditCard className="h-3 w-3 mr-1 text-green-500" />
+                  <div className="flex flex-wrap gap-1">
+                    {alert.relationships.lenders.map((lender, idx) => (
+                      <Badge key={idx} variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs px-1.5 py-0">
+                        {lender.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         
         {alert.property && (
           <div className="mt-2 text-xs text-muted-foreground">
