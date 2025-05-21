@@ -123,6 +123,12 @@ npm run dev
 npm run build
 ```
 
+To disable Google Analytics locally, create a `.env.local` file and set:
+
+```bash
+VITE_ENABLE_GA=false
+```
+
 ## Social Media Sharing
 
 The project includes OpenGraph meta tags and dynamic image generation for optimal social media sharing:
